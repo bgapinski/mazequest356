@@ -50,16 +50,24 @@ void handle_reshape(int, int) ;
 void handle_key(unsigned char key, int x, int y) ;
 void handle_special_key(int key, int x, int y) ;
 
+/* Functions */
+void init_maze();
+
+// Globals
 int win_width, win_height ;
 int nrows, ncols;
+maze_t* maze;
+cell_t* start; 
+cell_t* end;
 
 int main(int argc, char** argv) {
+    // Make sure there are the minimum number of arguments.
     if (argc < 3) {
-        printf("hw3b requires at least 2 arguments!\n\nSyntax:\n$ ./hw3b nrows ncols [GL options]");
+        printf("hw3b requires at least 2 arguments!\n\nSyntax:\n$ ./hw3b nrows ncols [GL options]\n");
 
         return EXIT_FAILURE;
     }
-    // Set the rows and columns
+
     nrows = atoi(argv[1]);
     ncols = atoi(argv[2]);
 
@@ -84,6 +92,8 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(handle_key) ;
     glutSpecialFunc(handle_special_key) ;
 
+    init_maze();
+
     //// Info to console.
     //printf(
     //    "X/x to place eye on postive/negative x-axis; same for Y/y, Z/z.\n") ;
@@ -99,6 +109,17 @@ int main(int argc, char** argv) {
     // A no-op, because glutMainLoop() will never return.  But required,
     // because GCC does not know that glutMainLoop never returns.
     return EXIT_SUCCESS ;
+}
+
+void init_maze() {
+    // Use the current time as the seed
+    long seed;
+    time(&seed);
+
+    maze = make_maze(nrows, ncols, seed);
+
+    start = get_start(maze);
+    end = get_end(maze);
 }
 
 /**  init_gl:  Initialize OpenGL.

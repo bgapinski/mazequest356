@@ -59,6 +59,19 @@ void init_maze();
 void draw_wall();
 void draw_tile();
 
+// Type of materials
+typedef struct _material_t {
+    GLfloat ambient[4];
+    GLfloat diffuse[4];
+    GLfloat specular[4];
+    GLfloat phong_exp[4];
+} material_t;
+
+typedef struct _light_t {
+    GLfloat position[4];
+    GLfloat color[4];
+} light_t;
+
 // Globals
 int win_width, win_height ;
 int nrows, ncols;
@@ -151,6 +164,7 @@ void set_projection_viewport() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
+    // TODO: Abstract this
     gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
 
     glViewport(0, 0, win_width, win_height);

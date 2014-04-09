@@ -45,13 +45,19 @@
 void init_gl();
 
 /* GLUT callbacks */
-void draw() ;
+void handle_display() ;
 void handle_reshape(int, int) ;
 void handle_key(unsigned char key, int x, int y) ;
 void handle_special_key(int key, int x, int y) ;
+void handle_close();
 
 /* Functions */
+void set_camera();
+void set_lighting();
+void set_projection_viewport();
 void init_maze();
+void draw_wall();
+void draw_tile();
 
 // Globals
 int win_width, win_height ;
@@ -72,9 +78,9 @@ int main(int argc, char** argv) {
     ncols = atoi(argv[2]);
 
     // GLUT initialization.
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH) ;
     glutInitWindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT) ;
     glutInitWindowPosition(DEFAULT_WINDOW_XORIG, DEFAULT_WINDOW_YORIG) ;
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH) ;
     glutInit(&argc, argv) ;
     if (!glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
         fprintf(stderr, "Cannot get requested display mode; exiting.\n") ;
@@ -87,21 +93,13 @@ int main(int argc, char** argv) {
     init_gl() ;
 
     // GLUT callbacks.
-    glutDisplayFunc(draw) ;
+    glutDisplayFunc(handle_display) ;
     glutReshapeFunc(handle_reshape) ;
     glutKeyboardFunc(handle_key) ;
     glutSpecialFunc(handle_special_key) ;
+    glutCloseFunc(handle_close);
 
     init_maze();
-
-    //// Info to console.
-    //printf(
-    //    "X/x to place eye on postive/negative x-axis; same for Y/y, Z/z.\n") ;
-    //printf("Arrow keys to move eye left/right/up/down.\n") ;
-    //printf("n/N and f/F to move near and far clipping planes toward/away "
-    //        "from eye.\n") ;
-    //printf("Ctrl-g/Ctrl-f to switch between flat and Goraud shading.\n") ;
-    //printf("1-9 to set recursion depth for sphere subdivision.\n") ;
 
     // Start the event loop.
     glutMainLoop() ;
@@ -128,21 +126,120 @@ void init_gl() {
     // Background color.
     glClearColor(0.0, 0.0, 0.0, 1.0) ;
     
-    glEnable(GL_DEPTH_TEST) ;
+    //glEnable(GL_DEPTH_TEST) ;
     glEnable(GL_LIGHTING) ;
     glEnable(GL_LIGHT0) ;
-    glShadeModel(GL_SMOOTH) ;
+    //glShadeModel(GL_SMOOTH) ;
     
-    //set_camera() ;
-    //set_lighting() ;
+    set_camera() ;
+    set_lighting() ;
    
     //dlist_id = glGenLists(1) ;
 }
 
+void set_camera() {
+    //TODO: Currently just testing stuff
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //gluLookAt(5.0, 0.0, 5.0, -10.0, 0.0, -10.0, 0.0, 0.0, 1.0);
+}
+
+void set_lighting() {
+}
+
+void set_projection_viewport() {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
+
+    glViewport(0, 0, win_width, win_height);
+}
+
+/** Draws the basic wall surface.
+ *  The wall is a rectangualr solid of length 1,
+ *  width 0.25, and height 1 along the x-axis
+ *  centered at the origin.
+ */
+void draw_wall() {
+    // TODO: Move colors to material type
+    float color[4] = {0.0, 0.0, 1.0, 1.0};
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+
+    glBegin(GL_QUADS);
+    // z = 1 plane
+    glNormal3f(0.0, 0.0, 1.0);
+    glVertex3f(0.5, 0.125, 0.5);
+    glVertex3f(0.5, -0.125, 0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(-0.5, 0.125, 0.5);
+
+    // z = -1 plane
+    glNormal3f(0.0, 0.0, -1.0);
+    glVertex3f(0.5, 0.125, -0.5);
+    glVertex3f(-0.5, 0.125, -0.5);
+    glVertex3f(-0.5, -0.125, -0.5);
+    glVertex3f(0.5, -0.125, -0.5);
+
+    // x = 1 plane
+    glNormal3f(1.0, 0.0, 0.0);
+    glVertex3f(0.5, 0.125, 0.5);
+    glVertex3f(0.5, 0.125, -0.5);
+    glVertex3f(0.5, -0.125, -0.5);
+    glVertex3f(0.5, -0.125, 0.5);
+
+    // x = -1 plane
+    glNormal3f(-1.0, 0.0, 0.0);
+    glVertex3f(-0.5, 0.125, 0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(-0.5, -0.125, -0.5);
+    glVertex3f(-0.5, 0.125, -0.5);
+
+    // y = 1 plane
+    glNormal3f(0.0, 1.0, 0.0);
+    glVertex3f(-0.5, 0.125, -0.5);
+    glVertex3f(0.5, 0.125, -0.5);
+    glVertex3f(0.5, 0.125, 0.5);
+    glVertex3f(-0.5, 0.125, 0.5);
+
+    // y = -1 plane
+    glNormal3f(0.0, -1.0, 0.0);
+    glVertex3f(-0.5, -0.125, -0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(0.5, -0.125, 0.5);
+    glVertex3f(0.5, -0.125, -0.5);
+
+    glEnd();
+}
+
+/** Draws the basic tile surface.
+ *  Tiles are a 2x2 square in the xy-plane
+ *  centered at the origin.
+ */
+void draw_tile() {
+    float color[4] = {1.0, 0.0, 0.0, 0.2};
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+
+    glBegin(GL_QUADS);
+
+    glNormal3f(0.0, 0.0, 1.0);
+    glVertex3f(1.0, 1.0, 0.0);
+    glVertex3f(1.0, -1.0, 0.0);
+    glVertex3f(-1.0, -1.0, 0.0);
+    glVertex3f(-1.0, 1.0, 0.0);
+
+    glEnd();
+}
+
 /** Draw the screen
  */
-void draw() {
-
+void handle_display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    draw_wall();
+    //draw_tile();
+    glFlush();
 }
 
 /** Handle reshape events by setting the projection transform to match
@@ -154,7 +251,7 @@ void draw() {
 void handle_reshape(int w, int h) {
     win_width = w ;
     win_height = h ;
-    //set_projection_viewport() ;
+    set_projection_viewport() ;
 }
 
 /** Handle key events.
@@ -243,4 +340,11 @@ void handle_special_key(int key, int x, int y) {
     //}
     //set_camera() ;
     //glutPostRedisplay() ;
+}
+
+/** Cleans up the program before exiting
+ */
+void handle_close() {
+    free(maze);
+    printf("Goodbye!\n");
 }

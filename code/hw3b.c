@@ -78,11 +78,18 @@ int nrows, ncols;
 maze_t* maze;
 cell_t* start; 
 cell_t* end;
+vector3_t eye;
+float eye_radius = 10.0;
+float eye_phi = 0.0;
+point3_t look_at = {0.0, 0.0, 0.0};
+vector3_t north = {0.0, 1.0, 0.0};
+
+unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
 int main(int argc, char** argv) {
     // Make sure there are the minimum number of arguments.
     if (argc < 3) {
-        printf("hw3b requires at least 2 arguments!\n\nSyntax:\n$ ./hw3b nrows ncols [GL options]\n");
+        printf("hw3b requires at least 2 arguments!\n\nUsage: ./hw3b nrows ncols [GL options]\n");
 
         return EXIT_FAILURE;
     }
@@ -131,6 +138,10 @@ void init_maze() {
 
     start = get_start(maze);
     end = get_end(maze);
+
+    eye.x = start->c;
+    eye.y = start->r;
+    eye.z = 5.0;
 }
 
 /**  init_gl:  Initialize OpenGL.
@@ -142,7 +153,7 @@ void init_gl() {
     //glEnable(GL_DEPTH_TEST) ;
     glEnable(GL_LIGHTING) ;
     glEnable(GL_LIGHT0) ;
-    //glShadeModel(GL_SMOOTH) ;
+    glShadeModel(GL_SMOOTH) ;
     
     set_camera() ;
     set_lighting() ;
@@ -154,7 +165,9 @@ void set_camera() {
     //TODO: Currently just testing stuff
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    //gluLookAt(5.0, 0.0, 5.0, -10.0, 0.0, -10.0, 0.0, 0.0, 1.0);
+    //TODO: Make this not use lookat
+    gluLookAt(nrows, ncols, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    //gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
 }
 
 void set_lighting() {
@@ -165,7 +178,8 @@ void set_projection_viewport() {
     glLoadIdentity();
 
     // TODO: Abstract this
-    gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
+    //gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
+    glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -232,7 +246,7 @@ void draw_wall() {
  *  centered at the origin.
  */
 void draw_tile() {
-    float color[4] = {1.0, 0.0, 0.0, 0.2};
+    float color[4] = {0.0, 1.0, 0.0, 0.2};
 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
@@ -250,8 +264,35 @@ void draw_tile() {
 /** Draw the screen
  */
 void handle_display() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    draw_wall();
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    for (int i = 0; i < nrows; ++i) {
+        for (int j = 0; j < ncols; ++j) {
+            cell_t* cell = get_cell(maze, i, j);
+            if (cell_cmp(start, cell) == 0) {
+                debug("Drawing start at coordinates %d, %d", i, j);
+                glPushMatrix();
+                glTranslatef(i, j, 0);
+                glScalef(0.5, 0.5, 1.0);
+                draw_tile();
+                glPopMatrix();
+            }
+            for (int d = 0; d < 4; ++d) {
+                if (has_wall(maze, cell, dir[d])) {
+                    debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
+                    glPushMatrix();
+                    //glScalef(1, 1, 3.0);
+                    glTranslatef(i, j, 0.5);
+                    if (d % 2 == 0) {
+                        // Rotating works
+                        glRotatef(90, 0, 0, 1); 
+                    }
+                    draw_wall();
+                    glPopMatrix();
+                }
+            }
+        }
+    }
     //draw_tile();
     glFlush();
 }

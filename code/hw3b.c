@@ -57,7 +57,7 @@ void set_lighting();
 void set_projection_viewport();
 void init_maze();
 void draw_wall();
-void draw_tile();
+void draw_tile(int);
 
 // Type of materials
 typedef struct _material_t {
@@ -109,9 +109,6 @@ int main(int argc, char** argv) {
 
     glutCreateWindow(WINDOW_TITLE) ;
 
-    // Initialize GL.
-    init_gl() ;
-
     // GLUT callbacks.
     glutDisplayFunc(handle_display) ;
     glutReshapeFunc(handle_reshape) ;
@@ -119,7 +116,11 @@ int main(int argc, char** argv) {
     glutSpecialFunc(handle_special_key) ;
     glutCloseFunc(handle_close);
 
+    // Initialize the maze.
     init_maze();
+
+    // Initialize GL.
+    init_gl() ;
 
     // Start the event loop.
     glutMainLoop() ;
@@ -139,9 +140,11 @@ void init_maze() {
     start = get_start(maze);
     end = get_end(maze);
 
+    //debug("Start: %d \t %d \n", start->c, start->r);
     eye.x = start->c;
     eye.y = start->r;
-    eye.z = 5.0;
+    eye.z = 3.0;
+    //debug("Eye: %f \t %f \t %f\n", eye.x, eye.y, eye.z);
 }
 
 /**  init_gl:  Initialize OpenGL.
@@ -166,8 +169,9 @@ void set_camera() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //TODO: Make this not use lookat
-    gluLookAt(nrows, ncols, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-    //gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
+    //gluLookAt(nrows, ncols, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
+    //gluLookAt(eye.x, eye.y, eye.z, eye.x+10.0, eye.y+10.0, eye.z, 0.0, 0.0, 1.0);
 }
 
 void set_lighting() {
@@ -178,8 +182,8 @@ void set_projection_viewport() {
     glLoadIdentity();
 
     // TODO: Abstract this
-    //gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
-    glOrtho(-10, 10, -10, 10, 1, 100);
+    gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
+    //glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -245,8 +249,20 @@ void draw_wall() {
  *  Tiles are a 2x2 square in the xy-plane
  *  centered at the origin.
  */
-void draw_tile() {
-    float color[4] = {0.0, 1.0, 0.0, 0.2};
+void draw_tile(int i) {
+    float GREEN[4] = {0.0, 1.0, 0.0, 1.0};
+    float RED[4] = {1.0, 0.0, 0.0, 1.0};
+    float BREAD[4] = {0.5, 0.7, 1.0};
+    float* color;
+    if (i == 0) {
+        color = GREEN;
+    }
+    else if (i == 1) {
+        color = RED;
+    }
+    else {
+        color = BREAD; 
+    }
 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
@@ -266,31 +282,68 @@ void draw_tile() {
 void handle_display() {
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
-    for (int i = 0; i < nrows; ++i) {
-        for (int j = 0; j < ncols; ++j) {
+    for (int i = 0; i < ncols; ++i) {
+        for (int j = 0; j < nrows; ++j) {
             cell_t* cell = get_cell(maze, i, j);
             if (cell_cmp(start, cell) == 0) {
-                debug("Drawing start at coordinates %d, %d", i, j);
+                //debug("Drawing start at coordinates %d, %d", i, j);
                 glPushMatrix();
-                glTranslatef(i, j, 0);
+                glTranslatef(i+0.5, j+0.5, 0);
                 glScalef(0.5, 0.5, 1.0);
-                draw_tile();
+                draw_tile(0);
+                glPopMatrix();
+            }
+            if (cell_cmp(end, cell) == 0) {
+                glPushMatrix();
+                glTranslatef(i+0.5, j+0.5, 0);
+                glScalef(0.5, 0.5, 1.0);
+                draw_tile(1);
                 glPopMatrix();
             }
             for (int d = 0; d < 4; ++d) {
-                if (has_wall(maze, cell, dir[d])) {
-                    debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
+            //    if (has_wall(maze, cell, dir[d])) {
+            //        //debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
                     glPushMatrix();
-                    //glScalef(1, 1, 3.0);
                     glTranslatef(i, j, 0.5);
+                    glScalef(1.0, 1.0, 2.0);
                     if (d % 2 == 0) {
                         // Rotating works
                         glRotatef(90, 0, 0, 1); 
                     }
                     draw_wall();
                     glPopMatrix();
-                }
+            //    }
             }
+            //if (has_wall(maze, cell, NORTH)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j, 0.5);
+            //    //glScalef(0.5, 1.0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, EAST)) {
+            //    glPushMatrix();
+            //    glTranslatef(i+1.0, j, 0.5);
+            //    //glScalef(0.5, 1.0, 1.0);
+            //    glRotatef(90, 0, 0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, SOUTH)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j+1.0, 0.5);
+            //    //glScalef(0.5, 1.0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, WEST)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j, 0.5);
+            //    //glScalef(0.5, 1.0, 1.0);
+            //    glRotatef(90, 0, 0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
         }
     }
     //draw_tile();

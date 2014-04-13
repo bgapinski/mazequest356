@@ -40,6 +40,7 @@
 #define DEFAULT_WINDOW_XORIG 0
 #define DEFAULT_WINDOW_YORIG 0
 #define WINDOW_TITLE "MazeQuest 356"
+#define PHI_INCR 2.0*M_PI/180
 
 /* OpenGL Initialization */
 void init_gl();
@@ -56,8 +57,16 @@ void set_camera();
 void set_lighting();
 void set_projection_viewport();
 void init_maze();
+
+/* Drawing functions */
 void draw_wall();
 void draw_tile(int);
+
+/* Movement Functions */
+void move_forward();
+void move_backward();
+void rotate_clockwise();
+void rotate_counter_clockwise();
 
 // Type of materials
 typedef struct _material_t {
@@ -78,11 +87,13 @@ int nrows, ncols;
 maze_t* maze;
 cell_t* start; 
 cell_t* end;
-vector3_t eye;
-float eye_radius = 10.0;
-float eye_phi = 0.0;
-point3_t look_at = {0.0, 0.0, 0.0};
-vector3_t north = {0.0, 1.0, 0.0};
+vector3_t north = {0.0, -1.0, 0.0}; //A reference vector to find look_at.
+point3_t eye;
+float eye_radius = 10.0; // How far ahead we can see.
+float phi = 0.0; // The angle from north we are looking at.
+point3_t look_at;
+vector3_t up = {0.0, 0.0, 1.0};
+bool bird_eye = false; // If the eye is in the maze or bird_eye
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -130,6 +141,8 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS ;
 }
 
+/** Sets up some globals based on the maze.
+ */
 void init_maze() {
     // Use the current time as the seed
     long seed;
@@ -164,25 +177,62 @@ void init_gl() {
     //dlist_id = glGenLists(1) ;
 }
 
+/** Sets the camera frame.
+ *  This will be either the birds eye view
+ *  or the in-maze point of view.
+ */
 void set_camera() {
-    //TODO: Currently just testing stuff
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    if (bird_eye) {
+    
+    }
+    else {
+        look_at.x = eye_radius * cos(phi) + eye.x;
+        look_at.y = eye_radius * sin(phi) + eye.y;
+        look_at.z = eye.z;
+
+        vector3_t u, v, w;
+        pv_subtract(&eye, &look_at, &w);
+        normalize(&w);
+        cross(&up, &w, &u);
+        normalize(&u);
+        cross(&w, &u, &v);
+
+        float camera_matrix[16] = {u.x, u.y, u.z, 0.0,
+                                   v.x, v.y, v.z, 0.0,
+                                   w.x, w.y, w.z, 0.0,
+                                   0.0, 0.0, 0.0, 1.0
+                                  };
+        float eye_matrix[16] = {1.0, 0.0, 0.0, -eye.x,
+                                0.0, 1.0, 0.0, -eye.y,
+                                0.0, 0.0, 1.0, -eye.z,
+                                0.0, 0.0, 0.0, 1.0
+                               };
+
+        glLoadIdentity();
+        glMultMatrixf(camera_matrix);
+        glMultMatrixf(eye_matrix);
+    }
+
     //TODO: Make this not use lookat
     //gluLookAt(nrows, ncols, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-    gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
+    //gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
     //gluLookAt(eye.x, eye.y, eye.z, eye.x+10.0, eye.y+10.0, eye.z, 0.0, 0.0, 1.0);
 }
 
+/** Setup the lighting.
+ */
 void set_lighting() {
 }
 
+/** Setup the projection viewport matrix.
+ */
 void set_projection_viewport() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
     // TODO: Abstract this
-    gluPerspective(60.0, (GLdouble)win_width/win_height, 4.0, 100.0);
+    gluPerspective(60.0, (GLdouble)win_width/win_height, 0.0, 50.0);
     //glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
@@ -277,6 +327,30 @@ void draw_tile(int i) {
     glEnd();
 }
 
+void move_forward() {
+    eye.x += cos(phi);
+    eye.y += sin(phi);
+}
+
+void move_backward() {
+    eye.x -= cos(phi);
+    eye.y -= sin(phi);
+}
+
+void rotate_clockwise() {
+    phi += PHI_INCR;
+    if (phi >= 2*M_PI) {
+        phi -= 2*M_PI;
+    }
+}
+
+void rotate_counter_clockwise() {
+    phi -= PHI_INCR;
+    if (phi < 0) {
+        phi += 2*M_PI;
+    }
+}
+
 /** Draw the screen
  */
 void handle_display() {
@@ -300,50 +374,50 @@ void handle_display() {
                 draw_tile(1);
                 glPopMatrix();
             }
-            for (int d = 0; d < 4; ++d) {
+            //for (int d = 0; d < 4; ++d) {
             //    if (has_wall(maze, cell, dir[d])) {
             //        //debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
-                    glPushMatrix();
-                    glTranslatef(i, j, 0.5);
-                    glScalef(1.0, 1.0, 2.0);
-                    if (d % 2 == 0) {
-                        // Rotating works
-                        glRotatef(90, 0, 0, 1); 
-                    }
-                    draw_wall();
-                    glPopMatrix();
+            //        glPushMatrix();
+            //        glTranslatef(i, j, 0.5);
+            //        glScalef(1.0, 1.0, 2.0);
+            //        if (d % 2 == 0) {
+            //            // Rotating works
+            //            glRotatef(90, 0, 0, 1); 
+            //        }
+            //        draw_wall();
+            //        glPopMatrix();
             //    }
+            //}
+            if (has_wall(maze, cell, NORTH)) {
+                glPushMatrix();
+                glTranslatef(i, j, 0.5);
+                //glScalef(0.5, 1.0, 1.0);
+                draw_wall();
+                glPopMatrix();
             }
-            //if (has_wall(maze, cell, NORTH)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j, 0.5);
-            //    //glScalef(0.5, 1.0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, EAST)) {
-            //    glPushMatrix();
-            //    glTranslatef(i+1.0, j, 0.5);
-            //    //glScalef(0.5, 1.0, 1.0);
-            //    glRotatef(90, 0, 0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, SOUTH)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j+1.0, 0.5);
-            //    //glScalef(0.5, 1.0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, WEST)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j, 0.5);
-            //    //glScalef(0.5, 1.0, 1.0);
-            //    glRotatef(90, 0, 0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
+            if (has_wall(maze, cell, EAST)) {
+                glPushMatrix();
+                glTranslatef(i+1.0, j, 0.5);
+                //glScalef(0.5, 1.0, 1.0);
+                glRotatef(90, 0, 0, 1.0);
+                draw_wall();
+                glPopMatrix();
+            }
+            if (has_wall(maze, cell, SOUTH)) {
+                glPushMatrix();
+                glTranslatef(i, j+1.0, 0.5);
+                //glScalef(0.5, 1.0, 1.0);
+                draw_wall();
+                glPopMatrix();
+            }
+            if (has_wall(maze, cell, WEST)) {
+                glPushMatrix();
+                glTranslatef(i, j, 0.5);
+                //glScalef(0.5, 1.0, 1.0);
+                glRotatef(90, 0, 0, 1.0);
+                draw_wall();
+                glPopMatrix();
+            }
         }
     }
     //draw_tile();
@@ -371,57 +445,39 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
 
-    //// Digits:  specify the recursion depth.
-    //if ('1' <= key && key <= '9') {
-    //    max_depth = key-'0' ;
-    //}
-
-    //else {
-    //    switch(key) {
-    //        case '+':
-    //            eye_dist += .1 ;
-    //            set_camera() ;
-    //            break ;
-    //        case '-':
-    //            eye_dist -= .1 ;
-    //            set_camera() ;
-    //            break ;
-    //        case 'n':
-    //            frust_near -= .1 ;
-    //            set_projection_viewport() ;
-    //            set_camera() ;
-    //            break ;
-    //        case 'N':
-    //            frust_near += .1 ;
-    //            set_projection_viewport() ;
-    //            set_camera() ;
-    //            break ;
-    //        case 'f':
-    //            frust_far -= .1 ;
-    //            set_projection_viewport() ;
-    //            set_camera() ;
-    //            break ;
-    //        case 'F':
-    //            frust_far += .1 ;
-    //            set_projection_viewport() ;
-    //            set_camera() ;
-    //            break ;
-    //        case ' ':
-    //            if (light0_pos == light0_point) light0_pos = light0_dist ;
-    //            else light0_pos = light0_point ;
-    //            break ;
-    //        case 'L':
-    //            do_dlist = !(do_dlist) ;
-    //            if (do_dlist) {
-    //              glNewList(dlist_id, GL_COMPILE) ;
-    //              draw_sphere() ;
-    //              glEndList() ;
-    //            }
-    //            break ;
-
-    //    }
-    //}
-    //glutPostRedisplay() ;
+    switch(key) {
+        case 'W':
+        case 'w':
+            //move forward
+            debug("Moving Forward");
+            move_forward();
+            break;
+        case 'S':
+        case 's':
+            //move backward
+            move_backward();
+            debug("Moving backward");
+            break;
+        case 'D':
+        case 'd':
+            //rotate clockwise
+            rotate_clockwise();
+            debug("Turning right");
+            break;
+        case 'A':
+        case 'a':
+            debug("Turning left");
+            //rotate ccw
+            rotate_counter_clockwise();
+            break;
+        case ' ':
+            debug("Jumping!");
+            //jump
+            bird_eye = !bird_eye;
+            break;
+    }
+    set_camera();
+    glutPostRedisplay() ;
 }
 
 /** Handle special key events.
@@ -432,22 +488,22 @@ void handle_key(unsigned char key, int x, int y) {
  */
 void handle_special_key(int key, int x, int y) {
     debug("handle_special_key()\n") ;
-    //switch(key) {
-    //    case GLUT_KEY_UP:       // Move eye up.
-    //        theta += 2.0 ;
-    //        break ;
-    //    case GLUT_KEY_DOWN:     // Move eye down.
-    //        theta -= 2.0 ;
-    //        break ;
-    //    case GLUT_KEY_LEFT:
-    //        phi -= 2.0 ;
-    //        break ;
-    //    case GLUT_KEY_RIGHT:
-    //        phi += 2.0 ;
-    //        break ;
-    //}
-    //set_camera() ;
-    //glutPostRedisplay() ;
+    switch(key) {
+        case GLUT_KEY_UP:       // Move eye up.
+            move_forward();
+            break;
+        case GLUT_KEY_DOWN:     // Move eye down.
+            move_backward();
+            break;
+        case GLUT_KEY_LEFT:
+            rotate_counter_clockwise();
+            break;
+        case GLUT_KEY_RIGHT:
+            rotate_clockwise();
+            break;
+    }
+    set_camera() ;
+    glutPostRedisplay() ;
 }
 
 /** Cleans up the program before exiting

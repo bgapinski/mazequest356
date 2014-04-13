@@ -87,7 +87,6 @@ int nrows, ncols;
 maze_t* maze;
 cell_t* start; 
 cell_t* end;
-vector3_t north = {0.0, -1.0, 0.0}; //A reference vector to find look_at.
 point3_t eye;
 float eye_radius = 10.0; // How far ahead we can see.
 float phi = 0.0; // The angle from north we are looking at.
@@ -96,6 +95,10 @@ vector3_t up = {0.0, 0.0, 1.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
+
+void debug_eye() {
+    debug("Eye:\n\tx: %f\n\ty: %f\n\tz: %f", eye.x, eye.y, eye.z);
+}
 
 int main(int argc, char** argv) {
     // Make sure there are the minimum number of arguments.
@@ -183,6 +186,7 @@ void init_gl() {
  */
 void set_camera() {
     glMatrixMode(GL_MODELVIEW);
+    debug_eye();
     if (bird_eye) {
         debug("Setting camera to bird view");
         gluLookAt(eye.x, eye.y, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
@@ -325,13 +329,13 @@ void draw_tile(int i) {
 }
 
 void move_forward() {
-    eye.x += cos(phi);
-    eye.y += sin(phi);
+    eye.x += 2*cos(phi);
+    eye.y += 2*sin(phi);
 }
 
 void move_backward() {
-    eye.x -= cos(phi);
-    eye.y -= sin(phi);
+    eye.x -= 2*cos(phi);
+    eye.y -= 2*sin(phi);
 }
 
 void rotate_clockwise() {

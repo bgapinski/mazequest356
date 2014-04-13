@@ -184,9 +184,11 @@ void init_gl() {
 void set_camera() {
     glMatrixMode(GL_MODELVIEW);
     if (bird_eye) {
-    
+        debug("Setting camera to bird view");
+        gluLookAt(eye.x, eye.y, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
     }
     else {
+        debug("Setting camera");
         look_at.x = eye_radius * cos(phi) + eye.x;
         look_at.y = eye_radius * sin(phi) + eye.y;
         look_at.z = eye.z;
@@ -213,11 +215,6 @@ void set_camera() {
         glMultMatrixf(camera_matrix);
         glMultMatrixf(eye_matrix);
     }
-
-    //TODO: Make this not use lookat
-    //gluLookAt(nrows, ncols, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-    //gluLookAt(3.0, 3.0, 15.0, nrows/2.0, ncols/2.0, -1.0, 0.0, 0.0, 1.0);
-    //gluLookAt(eye.x, eye.y, eye.z, eye.x+10.0, eye.y+10.0, eye.z, 0.0, 0.0, 1.0);
 }
 
 /** Setup the lighting.

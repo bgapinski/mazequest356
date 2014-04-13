@@ -329,26 +329,34 @@ void draw_tile(int i) {
 }
 
 void move_forward() {
-    eye.x += 2*cos(phi);
-    eye.y += 2*sin(phi);
+    if (!bird_eye) {
+        eye.x += 2*cos(phi);
+        eye.y += 2*sin(phi);
+    }
 }
 
 void move_backward() {
-    eye.x -= 2*cos(phi);
-    eye.y -= 2*sin(phi);
+    if (!bird_eye) {
+        eye.x -= 2*cos(phi);
+        eye.y -= 2*sin(phi);
+    }
 }
 
 void rotate_clockwise() {
-    phi += PHI_INCR;
-    if (phi >= 2*M_PI) {
-        phi -= 2*M_PI;
+    if (!bird_eye) {
+        phi += PHI_INCR;
+        if (phi >= 2*M_PI) {
+            phi -= 2*M_PI;
+        }
     }
 }
 
 void rotate_counter_clockwise() {
-    phi -= PHI_INCR;
-    if (phi < 0) {
-        phi += 2*M_PI;
+    if (!bird_eye) {
+        phi -= PHI_INCR;
+        if (phi < 0) {
+            phi += 2*M_PI;
+        }
     }
 }
 
@@ -392,14 +400,14 @@ void handle_display() {
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i, j, 0.5);
-                //glScalef(0.5, 1.0, 1.0);
+                glScalef(1.0, 0.1, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i+1.0, j, 0.5);
-                //glScalef(0.5, 1.0, 1.0);
+                glScalef(1.0, 0.1, 1.0);
                 glRotatef(90, 0, 0, 1.0);
                 draw_wall();
                 glPopMatrix();
@@ -407,14 +415,14 @@ void handle_display() {
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
                 glTranslatef(i, j+1.0, 0.5);
-                //glScalef(0.5, 1.0, 1.0);
+                glScalef(1.0, 0.1, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, j, 0.5);
-                //glScalef(0.5, 1.0, 1.0);
+                glScalef(1.0, 0.1, 1.0);
                 glRotatef(90, 0, 0, 1.0);
                 draw_wall();
                 glPopMatrix();

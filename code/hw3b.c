@@ -82,6 +82,13 @@ typedef struct _light_t {
     GLfloat color[4];
 } light_t;
 
+GLfloat BLACK[4] = {0.0, 0.0, 0.0, 1.0};
+
+light_t far_light = {
+    {20.0, 10.0, 0.0, 0.0},
+    {0.75, 0.75, 0.75, 1.0}
+};
+
 // Globals
 int win_width, win_height ;
 int nrows, ncols;
@@ -186,13 +193,14 @@ void init_maze() {
  */
 void init_gl() {
     // Background color.
-    glClearColor(0.0, 0.0, 0.0, 0.0) ;
     
     glEnable(GL_DEPTH_TEST) ;
     glEnable(GL_LIGHTING) ;
     glEnable(GL_LIGHT0) ;
-    glShadeModel(GL_SMOOTH) ;
-    
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
+    //glShadeModel(GL_SMOOTH) ;
+    glClearColor(0.0, 0.0, 0.0, 0.0) ;
+
     set_camera() ;
     set_lighting() ;
    
@@ -246,6 +254,10 @@ void set_camera() {
 /** Setup the lighting.
  */
 void set_lighting() {
+    light_t* light = &far_light;
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light->color);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, BLACK);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light->color);
 }
 
 /** Setup the projection viewport matrix.
@@ -256,7 +268,7 @@ void set_projection_viewport() {
 
     // TODO: Abstract this
     //gluPerspective(60.0, (GLdouble)win_width/win_height, 0.0, 50.0);
-    glOrtho(-100, 100, -100, 100, 1, 1000);
+    glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -461,6 +473,7 @@ void rotate_counter_clockwise() {
  */
 void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLightfv(GL_LIGHT0, GL_POSITION, far_light.position);
     draw_axes();
     draw_maze();
     glFlush();

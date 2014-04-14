@@ -220,6 +220,7 @@ void set_camera() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     debug_eye();
+    debug("Heading: %f\n", phi*180/M_PI);
     if (bird_eye) {
         debug("Setting camera to bird view");
         gluLookAt(eye.x, 20.0, eye.z,
@@ -239,6 +240,7 @@ void set_camera() {
         normalize(&u);
         cross(&w, &u, &v);
 
+        //Transpose the matrices because that is how GL reads them.
         float camera_matrix[16] = {u.x, v.x, w.x, 0.0,
                                    u.y, v.y, w.y, 0.0,
                                    u.z, v.z, w.z, 0.0,
@@ -287,7 +289,7 @@ void set_projection_viewport() {
  *  centered at the origin.
  */
 void draw_wall() {
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
 
     glBegin(GL_QUADS);
     // positive z plane
@@ -397,6 +399,8 @@ void draw_maze() {
                 glTranslatef(i+0.5, 0.5, j);
                 //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
+                float color[4] = {0.0,1.0,0.0,1.0};
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -404,6 +408,9 @@ void draw_maze() {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
                 //glScalef(1.0, 2.0, 1.0);
+                //
+                float color[4] = {1.0,0.0,0.0,1.0};
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -412,6 +419,8 @@ void draw_maze() {
                 glTranslatef(i-0.5, 0.5, j);
                 //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
+                float color[4] = {0.0,1.0,0.0,1.0};
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -419,6 +428,8 @@ void draw_maze() {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
                 //glScalef(1.0, 2.0, 1.0);
+                float color[4] = {1.0,0.0,0.0,1.0};
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -470,16 +481,16 @@ void print_position() {
 bool check_collision(float x, float z, int cur_row, int cur_col) {
     cell_t* cell = get_cell(maze, cur_row, cur_col);
     debug("Row, col: %d, %d", cur_row, cur_col);
-    if (cur_row + .375 < x && x < cur_row + 0.625) {
+    if (cur_row + .375 <= x && x <= cur_row + 0.625) {
         return (has_wall(maze, cell, NORTH));
     }
-    if (cur_row - 0.625 < x && x < cur_row - 0.375) {
+    if (cur_row - 0.625 <= x && x <= cur_row - 0.375) {
         return (has_wall(maze, cell, SOUTH));
     }
-    if (z < cur_col + 0.625 && cur_col + 0.375 < z) {
+    if (z <= cur_col + 0.625 && cur_col + 0.375 <= z) {
         return (has_wall(maze, cell, EAST));
     }
-    if (cur_col - 0.625 < z && z < cur_col - 0.375) {
+    if (cur_col - 0.625 <= z && z <= cur_col - 0.375) {
         return (has_wall(maze, cell, WEST));
     }
     return false;
@@ -491,8 +502,8 @@ void move_forward() {
     if (!bird_eye) {
         float new_x = eye.x + speed * cos(phi);
         float new_z = eye.z + speed * sin(phi);
-        int r = (int) eye.x;
-        int c = (int) eye.z;
+        int r = (int) round(eye.x);
+        int c = (int) round(eye.z);
         if (!check_collision(new_x, new_z, r, c)) {
             eye.x = new_x;
             eye.z = new_z;
@@ -509,8 +520,8 @@ void move_backward() {
     if (!bird_eye) {
         float new_x = eye.x - speed * cos(phi);
         float new_z = eye.z - speed * sin(phi);
-        int r = (int) floor(eye.x);
-        int c = (int) floor(eye.z);
+        int r = (int) round(eye.x);
+        int c = (int) round(eye.z);
         if (!check_collision(new_x, new_z, r, c)) {
             eye.x = new_x;
             eye.z = new_z;

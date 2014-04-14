@@ -64,7 +64,8 @@ void init_maze();
 /* Drawing functions */
 void draw_wall();
 void draw_tile(tile_t);
-void draw_maze();
+void draw_maze_walls();
+void draw_maze_tiles();
 void print_position();
 
 /* Movement Functions */
@@ -369,31 +370,13 @@ void draw_tile(tile_t tile) {
     glEnd();
 }
 
-/** Draws the maze.
+/** Draws the walls of the maze.
  */
-void draw_maze() {
+void draw_maze_walls() {
     glMatrixMode(GL_MODELVIEW);
     for (int i = 0; i < nrows; ++i) {
         for (int j = 0; j < ncols; ++j) {
             cell_t* cell = get_cell(maze, i, j);
-            // Draw the start cell
-            if (cell_cmp(start, cell) == 0) {
-                //debug("Drawing start at coordinates %d, %d", i, j);
-                glPushMatrix();
-                glTranslatef(i, 0.0, j);
-                glScalef(0.5, 1.0, 0.5);
-                draw_tile(START);
-                glPopMatrix();
-            }
-            // Draw the end cell
-            if (cell_cmp(end, cell) == 0) {
-                glPushMatrix();
-                glTranslatef(i, 0.0, j);
-                glScalef(0.5, 1.0, 0.5);
-                draw_tile(END);
-                glPopMatrix();
-            }
-            // Draw the walls.
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i+0.5, 0.5, j);
@@ -427,6 +410,30 @@ void draw_maze() {
             }
         }
     }
+}
+
+/** Draws the tiles for the maze.
+ *  This includes the start tile,
+ *  the end tile, and the breadcrumbs.
+ */
+void draw_maze_tiles() {
+    glMatrixMode(GL_MODELVIEW);
+
+    // Draw the start tile.
+    glPushMatrix();
+    glTranslatef(start->r, 0.0, start->c);
+    glScalef(0.5, 1.0, 0.5);
+    draw_tile(START);
+    glPopMatrix();
+
+    // Draw the end tile.
+    glPushMatrix();
+    glTranslatef(end->r, 0.0, end->c);
+    glScalef(0.5, 1.0, 0.5);
+    draw_tile(END);
+    glPopMatrix();
+
+    //TODO Bread crumbs
 }
 
 /** Print current position and heading.
@@ -557,7 +564,8 @@ void rotate_counter_clockwise() {
 void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLightfv(GL_LIGHT0, GL_POSITION, far_light.position);
-    draw_maze();
+    draw_maze_walls();
+    draw_maze_tiles();
     print_position();
     glFlush();
 }

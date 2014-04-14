@@ -62,6 +62,7 @@ void init_maze();
 void draw_wall();
 void draw_tile(int);
 void draw_maze();
+void print_position();
 
 /* Movement Functions */
 void move_forward();
@@ -272,42 +273,42 @@ void draw_wall() {
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
 
     glBegin(GL_QUADS);
-    // z = 1 plane
+    // positive z plane
     glNormal3f(0.0, 0.0, 1.0);
     glVertex3f(0.5, 0.5, 0.125);
     glVertex3f(-0.5, 0.5, 0.125);
     glVertex3f(-0.5, -0.5, 0.125);
     glVertex3f(0.5, -0.5, 0.125);
 
-    // z = -1 plane
+    // negative z plane
     glNormal3f(0.0, 0.0, -1.0);
     glVertex3f(0.5, 0.5, -0.125);
     glVertex3f(0.5, -0.5, -0.125);
     glVertex3f(-0.5, -0.5, -0.125);
     glVertex3f(-0.5, 0.5, -0.125);
 
-    // x = 1 plane
+    // positive x plane
     glNormal3f(1.0, 0.0, 0.0);
     glVertex3f(0.5, 0.5, 0.125);
     glVertex3f(0.5, -0.5, 0.125);
     glVertex3f(0.5, -0.5, -0.125);
     glVertex3f(0.5, 0.5, -0.125);
 
-    // x = -1 plane
+    // negative x plane
     glNormal3f(-1.0, 0.0, 0.0);
     glVertex3f(-0.5, 0.5, 0.125);
     glVertex3f(-0.5, 0.5, -0.125);
     glVertex3f(-0.5, -0.5, -0.125);
     glVertex3f(-0.5, -0.5, 0.125);
 
-    // y = 1 plane
+    // positive y plane
     glNormal3f(0.0, 1.0, 0.0);
     glVertex3f(0.5, 0.5, 0.125);
     glVertex3f(0.5, 0.5, -0.125);
     glVertex3f(-0.5, 0.5, -0.125);
     glVertex3f(-0.5, 0.5, 0.125);
 
-    // y = -1 plane
+    // negative y plane
     glNormal3f(0.0, -1.0, 0.0);
     glVertex3f(0.5, -0.5, 0.125);
     glVertex3f(-0.5, -0.5, 0.125);
@@ -405,6 +406,36 @@ void draw_maze() {
     }
 }
 
+/** Print current position and heading.
+ */
+void print_position() {
+    char* s;
+    asprintf(&s,
+            "Position: %.4f, %.4f\n"
+            "Heading: %.4f\n", eye.x, eye.z, phi);
+
+    glDisable(GL_LIGHTING);
+    glColor3f(1.0, 1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, win_width, 0, win_height);
+
+    glRasterPos2s(10, 50);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_10, (unsigned char*)s);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+
+    free(s);
+}
+
 void move_forward() {
     if (!bird_eye) {
         debug("Moving forward");
@@ -448,6 +479,7 @@ void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLightfv(GL_LIGHT0, GL_POSITION, far_light.position);
     draw_maze();
+    print_position();
     glFlush();
 }
 

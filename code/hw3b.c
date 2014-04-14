@@ -101,6 +101,7 @@ float phi = 0.0; // The angle from north we are looking at.
 point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
+float speed = 0.1;
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -184,7 +185,7 @@ void init_maze() {
 
     //debug("Start: %d \t %d \n", start->c, start->r);
     eye.x = start->r;
-    eye.y = 0.0;
+    eye.y = 0.5;
     eye.z = start->c;
     //debug("Eye: %f \t %f \t %f\n", eye.x, eye.y, eye.z);
 }
@@ -217,9 +218,8 @@ void set_camera() {
     debug_eye();
     if (bird_eye) {
         debug("Setting camera to bird view");
-        gluLookAt(eye.x, 3.0, eye.z,
-                  //start->r, 0.0, start->c,
-                  0.0, 0.0, 0.0,
+        gluLookAt(eye.x, 20.0, eye.z,
+                  start->r/2, 0.0, start->c/2,
                   0.0, 1.0, 0.0);
     }
     else {
@@ -228,26 +228,29 @@ void set_camera() {
         look_at.y = eye.y;
         look_at.z = eye_radius * sin(phi) + eye.z;
 
-        vector3_t u, v, w;
-        pv_subtract(&eye, &look_at, &w);
-        normalize(&w);
-        cross(&up, &w, &u);
-        normalize(&u);
-        cross(&w, &u, &v);
+        //vector3_t u, v, w;
+        //pv_subtract(&eye, &look_at, &w);
+        //normalize(&w);
+        //cross(&up, &w, &u);
+        //normalize(&u);
+        //cross(&w, &u, &v);
 
-        float camera_matrix[16] = {u.x, u.y, u.z, 0.0,
-                                   v.x, v.y, v.z, 0.0,
-                                   w.x, w.y, w.z, 0.0,
-                                   0.0, 0.0, 0.0, 1.0
-                                  };
-        float eye_matrix[16] = {1.0, 0.0, 0.0, -eye.x,
-                                0.0, 1.0, 0.0, -eye.y,
-                                0.0, 0.0, 1.0, -eye.z,
-                                0.0, 0.0, 0.0, 1.0
-                               };
+        //float camera_matrix[16] = {u.x, u.y, u.z, 0.0,
+        //                           v.x, v.y, v.z, 0.0,
+        //                           w.x, w.y, w.z, 0.0,
+        //                           0.0, 0.0, 0.0, 1.0
+        //                          };
+        //float eye_matrix[16] = {1.0, 0.0, 0.0, -eye.x,
+        //                        0.0, 1.0, 0.0, -eye.y,
+        //                        0.0, 0.0, 1.0, -eye.z,
+        //                        0.0, 0.0, 0.0, 1.0
+        //                       };
 
-        glMultMatrixf(camera_matrix);
-        glMultMatrixf(eye_matrix);
+        //glMultMatrixf(camera_matrix);
+        //glMultMatrixf(eye_matrix);
+        gluLookAt(eye.x, eye.y, eye.z,
+                  look_at.x, look_at.y, look_at.z,
+                  0.0, 1.0, 0.0);
     }
 }
 
@@ -267,8 +270,8 @@ void set_projection_viewport() {
     glLoadIdentity();
 
     // TODO: Abstract this
-    //gluPerspective(60.0, (GLdouble)win_width/win_height, 0.0, 50.0);
-    glOrtho(-10, 10, -10, 10, 1, 100);
+    gluPerspective(60.0, (GLdouble)win_width/win_height, 0.1, 100.0);
+    //glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -373,14 +376,14 @@ void draw_maze() {
                 //debug("Drawing start at coordinates %d, %d", i, j);
                 glPushMatrix();
                 glTranslatef(i, 0.0, j);
-                //glScalef(0.5, 0.5, 1.0);
+                glScalef(0.5, 1.0, 0.5);
                 draw_tile(0);
                 glPopMatrix();
             }
             if (cell_cmp(end, cell) == 0) {
                 glPushMatrix();
                 glTranslatef(i, 0.0, j);
-                //glScalef(0.5, 0.5, 1.0);
+                glScalef(0.5, 1.0, 0.5);
                 draw_tile(1);
                 glPopMatrix();
             }
@@ -400,30 +403,30 @@ void draw_maze() {
             //}
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
-                glTranslatef(5*i, 0.5, 5*j);
-                glScalef(5.0, 5.0, 1.0);
+                glTranslatef(i, 0.5, j);
+                glScalef(1.0, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
-                glTranslatef(5*i+1.0, 0.5, 5*j);
-                glScalef(5.0, 5.0, 1.0);
+                glTranslatef(i+1.0, 0.5, j);
+                glScalef(1.0, 1.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
-                glTranslatef(5*i, 0.5, 5*j+1.0);
-                glScalef(5.0, 5.0, 1.0);
+                glTranslatef(i, 0.5, j+1.0);
+                glScalef(1.0, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
-                glTranslatef(5*i, 0.5, 5*j);
-                glScalef(5.0, 5.0, 1.0);
+                glTranslatef(i, 0.5, j);
+                glScalef(1.0, 1.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -435,16 +438,16 @@ void draw_maze() {
 void move_forward() {
     if (!bird_eye) {
         debug("Moving forward");
-        eye.x += cos(phi);
-        eye.z += sin(phi);
+        eye.x += speed * cos(phi);
+        eye.z += speed * sin(phi);
     }
 }
 
 void move_backward() {
     if (!bird_eye) {
         debug("Moving backward!");
-        eye.x -= cos(phi);
-        eye.z -= sin(phi);
+        eye.x -= speed * cos(phi);
+        eye.z -= speed * sin(phi);
     }
 }
 

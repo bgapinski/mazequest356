@@ -210,7 +210,7 @@ void init_gl() {
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-    //glShadeModel(GL_SMOOTH) ;
+    glShadeModel(GL_SMOOTH) ;
     glClearColor(0.0, 0.0, 0.0, 0.0) ;
 
     set_camera() ;
@@ -285,7 +285,6 @@ void set_projection_viewport() {
 
     gluPerspective(60.0, (GLdouble)win_width/win_height, view_plane_near, 
             view_plane_far);
-    //glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -386,6 +385,7 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i+0.5, 0.5, j);
+                glScalef(1.0, 1.0, 1.25); //Smooth out the corners
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -393,12 +393,14 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
+                //glScalef(1.125, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
                 glTranslatef(i-0.5, 0.5, j);
+                glScalef(1.0, 1.0, 1.25); //Smooth out the corners
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -406,6 +408,7 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
+                //glScalef(1.125, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
@@ -440,8 +443,8 @@ void draw_maze_tiles() {
         for (int c = 0; c < ncols; ++c) {
             if (visited[r][c] == 1) {
                 glPushMatrix();
-                glTranslatef(r, 0.0, c);
-                glScalef(0.125, 1.0, 0.125);
+                glTranslatef(r, 0.0001, c); //Let the tiles sit atop the start cell.
+                glScalef(0.125, 2.0, 0.125);
                 draw_tile(BREAD);
                 glPopMatrix();
             }

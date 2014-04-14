@@ -148,8 +148,9 @@ int main(int argc, char** argv) {
  */
 void init_maze() {
     // Use the current time as the seed
-    long seed;
-    time(&seed);
+    //long seed;
+    //time(&seed);
+    long seed = 5555;
 
     maze = make_maze(nrows, ncols, seed);
 
@@ -159,7 +160,7 @@ void init_maze() {
     //debug("Start: %d \t %d \n", start->c, start->r);
     eye.x = start->c;
     eye.y = start->r;
-    eye.z = 3.0;
+    eye.z = 0.0;
     //debug("Eye: %f \t %f \t %f\n", eye.x, eye.y, eye.z);
 }
 
@@ -167,9 +168,9 @@ void init_maze() {
  */
 void init_gl() {
     // Background color.
-    glClearColor(0.0, 0.0, 0.0, 1.0) ;
+    glClearColor(0.0, 0.0, 0.0, 0.0) ;
     
-    //glEnable(GL_DEPTH_TEST) ;
+    glEnable(GL_DEPTH_TEST) ;
     glEnable(GL_LIGHTING) ;
     glEnable(GL_LIGHT0) ;
     glShadeModel(GL_SMOOTH) ;
@@ -186,10 +187,13 @@ void init_gl() {
  */
 void set_camera() {
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
     debug_eye();
     if (bird_eye) {
         debug("Setting camera to bird view");
-        gluLookAt(eye.x, eye.y, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        gluLookAt(eye.x, eye.y, 10.0,
+                  start->c/2.0, start->r/2.0, 0.0,
+                  0.0, 0.0, 1.0);
     }
     else {
         debug("Setting camera");
@@ -215,7 +219,6 @@ void set_camera() {
                                 0.0, 0.0, 0.0, 1.0
                                };
 
-        glLoadIdentity();
         glMultMatrixf(camera_matrix);
         glMultMatrixf(eye_matrix);
     }
@@ -233,8 +236,8 @@ void set_projection_viewport() {
     glLoadIdentity();
 
     // TODO: Abstract this
-    gluPerspective(60.0, (GLdouble)win_width/win_height, 0.0, 50.0);
-    //glOrtho(-10, 10, -10, 10, 1, 100);
+    //gluPerspective(60.0, (GLdouble)win_width/win_height, 0.0, 50.0);
+    glOrtho(-100, 100, -100, 100, 1, 1000);
 
     glViewport(0, 0, win_width, win_height);
 }
@@ -254,44 +257,44 @@ void draw_wall() {
     // z = 1 plane
     glNormal3f(0.0, 0.0, 1.0);
     glVertex3f(0.5, 0.125, 0.5);
-    glVertex3f(0.5, -0.125, 0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
     glVertex3f(-0.5, 0.125, 0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(0.5, -0.125, 0.5);
 
     // z = -1 plane
     glNormal3f(0.0, 0.0, -1.0);
     glVertex3f(0.5, 0.125, -0.5);
-    glVertex3f(-0.5, 0.125, -0.5);
-    glVertex3f(-0.5, -0.125, -0.5);
     glVertex3f(0.5, -0.125, -0.5);
+    glVertex3f(-0.5, -0.125, -0.5);
+    glVertex3f(-0.5, 0.125, -0.5);
 
     // x = 1 plane
     glNormal3f(1.0, 0.0, 0.0);
     glVertex3f(0.5, 0.125, 0.5);
-    glVertex3f(0.5, 0.125, -0.5);
-    glVertex3f(0.5, -0.125, -0.5);
     glVertex3f(0.5, -0.125, 0.5);
+    glVertex3f(0.5, -0.125, -0.5);
+    glVertex3f(0.5, 0.125, -0.5);
 
     // x = -1 plane
     glNormal3f(-1.0, 0.0, 0.0);
     glVertex3f(-0.5, 0.125, 0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
-    glVertex3f(-0.5, -0.125, -0.5);
     glVertex3f(-0.5, 0.125, -0.5);
+    glVertex3f(-0.5, -0.125, -0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
 
     // y = 1 plane
     glNormal3f(0.0, 1.0, 0.0);
     glVertex3f(-0.5, 0.125, -0.5);
-    glVertex3f(0.5, 0.125, -0.5);
-    glVertex3f(0.5, 0.125, 0.5);
     glVertex3f(-0.5, 0.125, 0.5);
+    glVertex3f(0.5, 0.125, 0.5);
+    glVertex3f(0.5, 0.125, -0.5);
 
     // y = -1 plane
     glNormal3f(0.0, -1.0, 0.0);
     glVertex3f(-0.5, -0.125, -0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
-    glVertex3f(0.5, -0.125, 0.5);
     glVertex3f(0.5, -0.125, -0.5);
+    glVertex3f(0.5, -0.125, 0.5);
+    glVertex3f(-0.5, -0.125, 0.5);
 
     glEnd();
 }
@@ -321,29 +324,32 @@ void draw_tile(int i) {
 
     glNormal3f(0.0, 0.0, 1.0);
     glVertex3f(1.0, 1.0, 0.0);
-    glVertex3f(1.0, -1.0, 0.0);
-    glVertex3f(-1.0, -1.0, 0.0);
     glVertex3f(-1.0, 1.0, 0.0);
+    glVertex3f(-1.0, -1.0, 0.0);
+    glVertex3f(1.0, -1.0, 0.0);
 
     glEnd();
 }
 
 void move_forward() {
     if (!bird_eye) {
-        eye.x += 2*cos(phi);
-        eye.y += 2*sin(phi);
+        debug("Moving forward");
+        eye.x += cos(phi);
+        eye.y += sin(phi);
     }
 }
 
 void move_backward() {
     if (!bird_eye) {
-        eye.x -= 2*cos(phi);
-        eye.y -= 2*sin(phi);
+        debug("Moving backward!");
+        eye.x -= cos(phi);
+        eye.y -= sin(phi);
     }
 }
 
 void rotate_clockwise() {
     if (!bird_eye) {
+        debug("Turing right!");
         phi += PHI_INCR;
         if (phi >= 2*M_PI) {
             phi -= 2*M_PI;
@@ -353,6 +359,7 @@ void rotate_clockwise() {
 
 void rotate_counter_clockwise() {
     if (!bird_eye) {
+        debug("Turing left");
         phi -= PHI_INCR;
         if (phi < 0) {
             phi += 2*M_PI;
@@ -363,7 +370,7 @@ void rotate_counter_clockwise() {
 /** Draw the screen
  */
 void handle_display() {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     for (int i = 0; i < ncols; ++i) {
         for (int j = 0; j < nrows; ++j) {
@@ -371,14 +378,14 @@ void handle_display() {
             if (cell_cmp(start, cell) == 0) {
                 //debug("Drawing start at coordinates %d, %d", i, j);
                 glPushMatrix();
-                glTranslatef(i+0.5, j+0.5, 0);
+                glTranslatef(i, j, 0.0);
                 glScalef(0.5, 0.5, 1.0);
                 draw_tile(0);
                 glPopMatrix();
             }
             if (cell_cmp(end, cell) == 0) {
                 glPushMatrix();
-                glTranslatef(i+0.5, j+0.5, 0);
+                glTranslatef(i, j, 0.0);
                 glScalef(0.5, 0.5, 1.0);
                 draw_tile(1);
                 glPopMatrix();
@@ -397,39 +404,38 @@ void handle_display() {
             //        glPopMatrix();
             //    }
             //}
-            if (has_wall(maze, cell, NORTH)) {
-                glPushMatrix();
-                glTranslatef(i, j, 0.5);
-                glScalef(1.0, 0.1, 1.0);
-                draw_wall();
-                glPopMatrix();
-            }
-            if (has_wall(maze, cell, EAST)) {
-                glPushMatrix();
-                glTranslatef(i+1.0, j, 0.5);
-                glScalef(1.0, 0.1, 1.0);
-                glRotatef(90, 0, 0, 1.0);
-                draw_wall();
-                glPopMatrix();
-            }
-            if (has_wall(maze, cell, SOUTH)) {
-                glPushMatrix();
-                glTranslatef(i, j+1.0, 0.5);
-                glScalef(1.0, 0.1, 1.0);
-                draw_wall();
-                glPopMatrix();
-            }
-            if (has_wall(maze, cell, WEST)) {
-                glPushMatrix();
-                glTranslatef(i, j, 0.5);
-                glScalef(1.0, 0.1, 1.0);
-                glRotatef(90, 0, 0, 1.0);
-                draw_wall();
-                glPopMatrix();
-            }
+            //if (has_wall(maze, cell, NORTH)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j, 0.5);
+            //    //glScalef(1.0, 0.1, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, EAST)) {
+            //    glPushMatrix();
+            //    glTranslatef(i+1.0, j, 0.5);
+            //    //glScalef(1.0, 0.1, 1.0);
+            //    glRotatef(90, 0.0, 0.0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, SOUTH)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j+1.0, 0.5);
+            //    //glScalef(1.0, 0.1, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
+            //if (has_wall(maze, cell, WEST)) {
+            //    glPushMatrix();
+            //    glTranslatef(i, j, 0.5);
+            //    //glScalef(1.0, 0.1, 1.0);
+            //    glRotatef(90, 0, 0, 1.0);
+            //    draw_wall();
+            //    glPopMatrix();
+            //}
         }
     }
-    //draw_tile();
     glFlush();
 }
 
@@ -457,31 +463,25 @@ void handle_key(unsigned char key, int x, int y) {
     switch(key) {
         case 'W':
         case 'w':
-            //move forward
-            debug("Moving Forward");
+        case 'k':
             move_forward();
             break;
         case 'S':
         case 's':
-            //move backward
+        case 'j':
             move_backward();
-            debug("Moving backward");
             break;
         case 'D':
         case 'd':
-            //rotate clockwise
+        case 'l':
             rotate_clockwise();
-            debug("Turning right");
             break;
         case 'A':
         case 'a':
-            debug("Turning left");
-            //rotate ccw
+        case 'h':
             rotate_counter_clockwise();
             break;
         case ' ':
-            debug("Jumping!");
-            //jump
             bird_eye = !bird_eye;
             break;
     }

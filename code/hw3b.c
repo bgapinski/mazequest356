@@ -109,23 +109,6 @@ void debug_eye() {
     debug("Eye:\n\tx: %f\n\ty: %f\n\tz: %f", eye.x, eye.y, eye.z);
 }
 
-/** Draw the coordinate axes as line segments from -100 to +100 along
- *  *  the corresponding axis.
- *   */
-void draw_axes() {
-    glBegin(GL_LINES) ;
-    glColor3f(0.0, 0.0, 1.0) ;
-    glVertex3f(0.0f, 0.0f, -100.0f) ;
-    glVertex3f(0.0f, 0.0f, 100.0f) ;
-    glColor3f(1.0, 0.0, 0.0) ;
-    glVertex3f(-100.0f, 0.0f, 0.0f) ;
-    glVertex3f(100.0f, 0.0f, 0.0f) ;
-    glColor3f(0.0, 1.0, 0.0) ;
-    glVertex3f(0.0f, -100.0f, 0.0f) ;
-    glVertex3f(0.0f, 100.0f, 0.0f) ;
-    glEnd() ;
-}
-
 int main(int argc, char** argv) {
     // Make sure there are the minimum number of arguments.
     if (argc < 3) {
@@ -228,29 +211,26 @@ void set_camera() {
         look_at.y = eye.y;
         look_at.z = eye_radius * sin(phi) + eye.z;
 
-        //vector3_t u, v, w;
-        //pv_subtract(&eye, &look_at, &w);
-        //normalize(&w);
-        //cross(&up, &w, &u);
-        //normalize(&u);
-        //cross(&w, &u, &v);
+        vector3_t u, v, w;
+        pv_subtract(&eye, &look_at, &w);
+        normalize(&w);
+        cross(&up, &w, &u);
+        normalize(&u);
+        cross(&w, &u, &v);
 
-        //float camera_matrix[16] = {u.x, u.y, u.z, 0.0,
-        //                           v.x, v.y, v.z, 0.0,
-        //                           w.x, w.y, w.z, 0.0,
-        //                           0.0, 0.0, 0.0, 1.0
-        //                          };
-        //float eye_matrix[16] = {1.0, 0.0, 0.0, -eye.x,
-        //                        0.0, 1.0, 0.0, -eye.y,
-        //                        0.0, 0.0, 1.0, -eye.z,
-        //                        0.0, 0.0, 0.0, 1.0
-        //                       };
+        float camera_matrix[16] = {u.x, v.x, w.x, 0.0,
+                                   u.y, v.y, w.y, 0.0,
+                                   u.z, v.z, w.z, 0.0,
+                                   0.0, 0.0, 0.0, 1.0
+                                  };
+        float eye_matrix[16] = {1.0, 0.0, 0.0, 0.0,
+                                0.0, 1.0, 0.0, 0.0,
+                                0.0, 0.0, 1.0, 0.0,
+                                -eye.x, -eye.y, -eye.z, 1.0
+                               };
 
-        //glMultMatrixf(camera_matrix);
-        //glMultMatrixf(eye_matrix);
-        gluLookAt(eye.x, eye.y, eye.z,
-                  look_at.x, look_at.y, look_at.z,
-                  0.0, 1.0, 0.0);
+        glMultMatrixf(camera_matrix);
+        glMultMatrixf(eye_matrix);
     }
 }
 
@@ -387,20 +367,6 @@ void draw_maze() {
                 draw_tile(1);
                 glPopMatrix();
             }
-            //for (int d = 0; d < 4; ++d) {
-            //    if (has_wall(maze, cell, dir[d])) {
-            //        //debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
-            //        glPushMatrix();
-            //        glTranslatef(i, j, 0.5);
-            //        glScalef(1.0, 1.0, 2.0);
-            //        if (d % 2 == 0) {
-            //            // Rotating works
-            //            glRotatef(90, 0, 0, 1); 
-            //        }
-            //        draw_wall();
-            //        glPopMatrix();
-            //    }
-            //}
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j);
@@ -410,7 +376,7 @@ void draw_maze() {
             }
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
-                glTranslatef(i+1.0, 0.5, j);
+                glTranslatef(i, 0.5, j);
                 glScalef(1.0, 1.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
@@ -425,7 +391,7 @@ void draw_maze() {
             }
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
-                glTranslatef(i, 0.5, j);
+                glTranslatef(i+1.0, 0.5, j);
                 glScalef(1.0, 1.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
@@ -477,7 +443,6 @@ void rotate_counter_clockwise() {
 void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLightfv(GL_LIGHT0, GL_POSITION, far_light.position);
-    draw_axes();
     draw_maze();
     glFlush();
 }

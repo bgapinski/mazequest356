@@ -90,6 +90,7 @@ typedef struct _light_t {
 
 GLfloat BLACK[4] = {0.0, 0.0, 0.0, 1.0};
 
+// Create some lights.
 light_t far_light = {
     {50.0, 50.0, 50.0, 0.0},
     {0.75, 0.75, 0.75, 1.0}
@@ -100,6 +101,7 @@ light_t maze_light = {
     {0.1, 0.1, 0.1, 1.0}
 };
 
+// Define some materials.
 material_t blue_plastic = {
     {0.0f, 0.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 1.0f, 1.0f},
@@ -111,21 +113,21 @@ material_t start_tile = {
     {0.0f, 1.0f, 0.0f, 1.0f},
     {0.0f, 1.0f, 0.0f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
-    {1000.0f}
+    {0.0f}
 };
 
 material_t end_tile = {
     {1.0f, 0.0f, 0.0f, 1.0f},
     {1.0f, 0.0f, 0.0f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
-    {1000.0f}
+    {0.0f}
 };
 
 material_t bread_crumb = {
     {0.3984f, 0.1992f, 0.0f, 1.0f},
     {0.3984f, 0.1992f, 0.0f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
-    {1000.0f}
+    {0.0f}
 };
 
 // Globals
@@ -224,14 +226,14 @@ void init_maze() {
 /**  init_gl:  Initialize OpenGL.
  */
 void init_gl() {
-    // Background color.
-    
     glEnable(GL_DEPTH_TEST);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
     glShadeModel(GL_SMOOTH) ;
+
     glClearColor(0.0, 0.0, 0.0, 0.0) ;
 
     set_camera() ;
@@ -411,7 +413,7 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
-                //glScalef(1.125, 1.0, 1.0);
+                glScalef(1.25, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
@@ -426,7 +428,7 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
-                //glScalef(1.125, 1.0, 1.0);
+                glScalef(1.25, 1.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }

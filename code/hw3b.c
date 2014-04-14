@@ -122,6 +122,7 @@ bool bird_eye = false; // If the eye is in the maze or bird_eye
 float speed = 0.1;
 float view_plane_near = 0.1;
 float view_plane_far = 100.0;
+int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -187,11 +188,16 @@ void init_maze() {
     start = get_start(maze);
     end = get_end(maze);
 
-    //debug("Start: %d \t %d \n", start->c, start->r);
+    // Set the eye to the start cell.
     eye.x = start->r;
     eye.y = 0.5;
     eye.z = start->c;
-    //debug("Eye: %f \t %f \t %f\n", eye.x, eye.y, eye.z);
+
+    // Initialze the visited array
+    visited = (int**) malloc(nrows*ncols*sizeof(int*));
+    for (int r = 0; r < nrows; ++r) {
+        visited[r] = calloc(ncols, sizeof(int));
+    }
 }
 
 /**  init_gl:  Initialize OpenGL.
@@ -345,7 +351,7 @@ void draw_wall() {
 void draw_tile(tile_t tile) {
     float GREEN[4] = {0.0, 1.0, 0.0, 1.0};
     float RED[4] = {1.0, 0.0, 0.0, 1.0};
-    float BREAD[4] = {0.5, 0.7, 1.0};
+    float BREAD[4] = {0.3984, 0.1992, 0.0};
     float* color;
     if (tile == START) {
         color = GREEN;
@@ -380,7 +386,6 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i+0.5, 0.5, j);
-                //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -388,15 +393,12 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
-                //glScalef(1.0, 2.0, 1.0);
-                //
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
                 glTranslatef(i-0.5, 0.5, j);
-                //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -404,7 +406,6 @@ void draw_maze_walls() {
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
-                //glScalef(1.0, 2.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
@@ -433,7 +434,17 @@ void draw_maze_tiles() {
     draw_tile(END);
     glPopMatrix();
 
-    //TODO Bread crumbs
+    for (int r = 0; r < nrows; ++r) {
+        for (int c = 0; c < ncols; ++c) {
+            if (visited[r][c] == 1) {
+                glPushMatrix();
+                glTranslatef(r, 0.0, c);
+                glScalef(0.125, 1.0, 0.125);
+                draw_tile(BREAD);
+                glPopMatrix();
+            }
+        }
+    }
 }
 
 /** Print current position and heading.
@@ -511,6 +522,7 @@ void move_forward() {
         if (!check_collision(new_x, new_z, r, c)) {
             eye.x = new_x;
             eye.z = new_z;
+            visited[r][c] = 1;
         }
         else {
             debug("Collision!");
@@ -529,6 +541,7 @@ void move_backward() {
         if (!check_collision(new_x, new_z, r, c)) {
             eye.x = new_x;
             eye.z = new_z;
+            visited[r][c] = 1;
         }
         else{
             debug("Collision!");
@@ -647,5 +660,9 @@ void handle_special_key(int key, int x, int y) {
  */
 void handle_close() {
     free(maze);
+    for (int r = 0; r < nrows; ++r) {
+        free(visited[r]);
+    }
+    free(visited);
     printf("Goodbye!\n");
 }

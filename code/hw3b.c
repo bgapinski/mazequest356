@@ -107,6 +107,27 @@ material_t blue_plastic = {
     {1000.0f}
 };
 
+material_t start_tile = {
+    {0.0f, 1.0f, 0.0f, 1.0f},
+    {0.0f, 1.0f, 0.0f, 1.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1000.0f}
+};
+
+material_t end_tile = {
+    {1.0f, 0.0f, 0.0f, 1.0f},
+    {1.0f, 0.0f, 0.0f, 1.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1000.0f}
+};
+
+material_t bread_crumb = {
+    {0.3984f, 0.1992f, 0.0f, 1.0f},
+    {0.3984f, 0.1992f, 0.0f, 1.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {1000.0f}
+};
+
 // Globals
 int win_width, win_height ;
 int nrows, ncols;
@@ -348,21 +369,18 @@ void draw_wall() {
  *  centered at the origin.
  */
 void draw_tile(tile_t tile) {
-    float GREEN[4] = {0.0, 1.0, 0.0, 1.0};
-    float RED[4] = {1.0, 0.0, 0.0, 1.0};
-    float BREAD[4] = {0.3984, 0.1992, 0.0};
-    float* color;
     if (tile == START) {
-        color = GREEN;
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);
     }
     else if (tile == END) {
-        color = RED;
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, end_tile.diffuse);
+    }
+    else if (tile == BREAD) {
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, bread_crumb.diffuse);
     }
     else {
-        color = BREAD; 
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, BLACK);
     }
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
     glBegin(GL_QUADS);
 

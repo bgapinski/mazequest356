@@ -61,6 +61,7 @@ void init_maze();
 /* Drawing functions */
 void draw_wall();
 void draw_tile(int);
+void draw_maze();
 
 /* Movement Functions */
 void move_forward();
@@ -91,13 +92,30 @@ point3_t eye;
 float eye_radius = 10.0; // How far ahead we can see.
 float phi = 0.0; // The angle from north we are looking at.
 point3_t look_at;
-vector3_t up = {0.0, 0.0, 1.0};
+vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
 void debug_eye() {
     debug("Eye:\n\tx: %f\n\ty: %f\n\tz: %f", eye.x, eye.y, eye.z);
+}
+
+/** Draw the coordinate axes as line segments from -100 to +100 along
+ *  *  the corresponding axis.
+ *   */
+void draw_axes() {
+    glBegin(GL_LINES) ;
+    glColor3f(0.0, 0.0, 1.0) ;
+    glVertex3f(0.0f, 0.0f, -100.0f) ;
+    glVertex3f(0.0f, 0.0f, 100.0f) ;
+    glColor3f(1.0, 0.0, 0.0) ;
+    glVertex3f(-100.0f, 0.0f, 0.0f) ;
+    glVertex3f(100.0f, 0.0f, 0.0f) ;
+    glColor3f(0.0, 1.0, 0.0) ;
+    glVertex3f(0.0f, -100.0f, 0.0f) ;
+    glVertex3f(0.0f, 100.0f, 0.0f) ;
+    glEnd() ;
 }
 
 int main(int argc, char** argv) {
@@ -158,9 +176,9 @@ void init_maze() {
     end = get_end(maze);
 
     //debug("Start: %d \t %d \n", start->c, start->r);
-    eye.x = start->c;
-    eye.y = start->r;
-    eye.z = 0.0;
+    eye.x = start->r;
+    eye.y = 0.0;
+    eye.z = start->c;
     //debug("Eye: %f \t %f \t %f\n", eye.x, eye.y, eye.z);
 }
 
@@ -191,15 +209,16 @@ void set_camera() {
     debug_eye();
     if (bird_eye) {
         debug("Setting camera to bird view");
-        gluLookAt(eye.x, eye.y, 10.0,
-                  start->c/2.0, start->r/2.0, 0.0,
-                  0.0, 0.0, 1.0);
+        gluLookAt(eye.x, 3.0, eye.z,
+                  //start->r, 0.0, start->c,
+                  0.0, 0.0, 0.0,
+                  0.0, 1.0, 0.0);
     }
     else {
         debug("Setting camera");
         look_at.x = eye_radius * cos(phi) + eye.x;
-        look_at.y = eye_radius * sin(phi) + eye.y;
-        look_at.z = eye.z;
+        look_at.y = eye.y;
+        look_at.z = eye_radius * sin(phi) + eye.z;
 
         vector3_t u, v, w;
         pv_subtract(&eye, &look_at, &w);
@@ -256,45 +275,45 @@ void draw_wall() {
     glBegin(GL_QUADS);
     // z = 1 plane
     glNormal3f(0.0, 0.0, 1.0);
-    glVertex3f(0.5, 0.125, 0.5);
-    glVertex3f(-0.5, 0.125, 0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
-    glVertex3f(0.5, -0.125, 0.5);
+    glVertex3f(0.5, 0.5, 0.125);
+    glVertex3f(-0.5, 0.5, 0.125);
+    glVertex3f(-0.5, -0.5, 0.125);
+    glVertex3f(0.5, -0.5, 0.125);
 
     // z = -1 plane
     glNormal3f(0.0, 0.0, -1.0);
-    glVertex3f(0.5, 0.125, -0.5);
-    glVertex3f(0.5, -0.125, -0.5);
-    glVertex3f(-0.5, -0.125, -0.5);
-    glVertex3f(-0.5, 0.125, -0.5);
+    glVertex3f(0.5, 0.5, -0.125);
+    glVertex3f(0.5, -0.5, -0.125);
+    glVertex3f(-0.5, -0.5, -0.125);
+    glVertex3f(-0.5, 0.5, -0.125);
 
     // x = 1 plane
     glNormal3f(1.0, 0.0, 0.0);
-    glVertex3f(0.5, 0.125, 0.5);
-    glVertex3f(0.5, -0.125, 0.5);
-    glVertex3f(0.5, -0.125, -0.5);
-    glVertex3f(0.5, 0.125, -0.5);
+    glVertex3f(0.5, 0.5, 0.125);
+    glVertex3f(0.5, -0.5, 0.125);
+    glVertex3f(0.5, -0.5, -0.125);
+    glVertex3f(0.5, 0.5, -0.125);
 
     // x = -1 plane
     glNormal3f(-1.0, 0.0, 0.0);
-    glVertex3f(-0.5, 0.125, 0.5);
-    glVertex3f(-0.5, 0.125, -0.5);
-    glVertex3f(-0.5, -0.125, -0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(-0.5, 0.5, 0.125);
+    glVertex3f(-0.5, 0.5, -0.125);
+    glVertex3f(-0.5, -0.5, -0.125);
+    glVertex3f(-0.5, -0.5, 0.125);
 
     // y = 1 plane
     glNormal3f(0.0, 1.0, 0.0);
-    glVertex3f(-0.5, 0.125, -0.5);
-    glVertex3f(-0.5, 0.125, 0.5);
-    glVertex3f(0.5, 0.125, 0.5);
-    glVertex3f(0.5, 0.125, -0.5);
+    glVertex3f(0.5, 0.5, 0.125);
+    glVertex3f(0.5, 0.5, -0.125);
+    glVertex3f(-0.5, 0.5, -0.125);
+    glVertex3f(-0.5, 0.5, 0.125);
 
     // y = -1 plane
     glNormal3f(0.0, -1.0, 0.0);
-    glVertex3f(-0.5, -0.125, -0.5);
-    glVertex3f(0.5, -0.125, -0.5);
-    glVertex3f(0.5, -0.125, 0.5);
-    glVertex3f(-0.5, -0.125, 0.5);
+    glVertex3f(0.5, -0.5, 0.125);
+    glVertex3f(-0.5, -0.5, 0.125);
+    glVertex3f(-0.5, -0.5, -0.125);
+    glVertex3f(0.5, -0.5, -0.125);
 
     glEnd();
 }
@@ -322,20 +341,90 @@ void draw_tile(int i) {
 
     glBegin(GL_QUADS);
 
-    glNormal3f(0.0, 0.0, 1.0);
-    glVertex3f(1.0, 1.0, 0.0);
-    glVertex3f(-1.0, 1.0, 0.0);
-    glVertex3f(-1.0, -1.0, 0.0);
-    glVertex3f(1.0, -1.0, 0.0);
+    glNormal3f(0.0, 1.0, 0.0);
+    glVertex3f(1.0, 0.0, 1.0);
+    glVertex3f(1.0, 0.0, -1.0);
+    glVertex3f(-1.0, 0.0, -1.0);
+    glVertex3f(-1.0, 0.0, 1.0);
 
     glEnd();
+}
+
+/** Draws the maze.
+ */
+void draw_maze() {
+    glMatrixMode(GL_MODELVIEW);
+    for (int i = 0; i < nrows; ++i) {
+        for (int j = 0; j < ncols; ++j) {
+            cell_t* cell = get_cell(maze, i, j);
+            if (cell_cmp(start, cell) == 0) {
+                //debug("Drawing start at coordinates %d, %d", i, j);
+                glPushMatrix();
+                glTranslatef(i, 0.0, j);
+                //glScalef(0.5, 0.5, 1.0);
+                draw_tile(0);
+                glPopMatrix();
+            }
+            if (cell_cmp(end, cell) == 0) {
+                glPushMatrix();
+                glTranslatef(i, 0.0, j);
+                //glScalef(0.5, 0.5, 1.0);
+                draw_tile(1);
+                glPopMatrix();
+            }
+            //for (int d = 0; d < 4; ++d) {
+            //    if (has_wall(maze, cell, dir[d])) {
+            //        //debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
+            //        glPushMatrix();
+            //        glTranslatef(i, j, 0.5);
+            //        glScalef(1.0, 1.0, 2.0);
+            //        if (d % 2 == 0) {
+            //            // Rotating works
+            //            glRotatef(90, 0, 0, 1); 
+            //        }
+            //        draw_wall();
+            //        glPopMatrix();
+            //    }
+            //}
+            if (has_wall(maze, cell, NORTH)) {
+                glPushMatrix();
+                glTranslatef(5*i, 0.5, 5*j);
+                glScalef(5.0, 5.0, 1.0);
+                draw_wall();
+                glPopMatrix();
+            }
+            if (has_wall(maze, cell, EAST)) {
+                glPushMatrix();
+                glTranslatef(5*i+1.0, 0.5, 5*j);
+                glScalef(5.0, 5.0, 1.0);
+                glRotatef(90, 0.0, 1.0, 0.0);
+                draw_wall();
+                glPopMatrix();
+            }
+            if (has_wall(maze, cell, SOUTH)) {
+                glPushMatrix();
+                glTranslatef(5*i, 0.5, 5*j+1.0);
+                glScalef(5.0, 5.0, 1.0);
+                draw_wall();
+                glPopMatrix();
+            }
+            if (has_wall(maze, cell, WEST)) {
+                glPushMatrix();
+                glTranslatef(5*i, 0.5, 5*j);
+                glScalef(5.0, 5.0, 1.0);
+                glRotatef(90, 0.0, 1.0, 0.0);
+                draw_wall();
+                glPopMatrix();
+            }
+        }
+    }
 }
 
 void move_forward() {
     if (!bird_eye) {
         debug("Moving forward");
         eye.x += cos(phi);
-        eye.y += sin(phi);
+        eye.z += sin(phi);
     }
 }
 
@@ -343,7 +432,7 @@ void move_backward() {
     if (!bird_eye) {
         debug("Moving backward!");
         eye.x -= cos(phi);
-        eye.y -= sin(phi);
+        eye.z -= sin(phi);
     }
 }
 
@@ -367,75 +456,13 @@ void rotate_counter_clockwise() {
     }
 }
 
+
 /** Draw the screen
  */
 void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    for (int i = 0; i < ncols; ++i) {
-        for (int j = 0; j < nrows; ++j) {
-            cell_t* cell = get_cell(maze, i, j);
-            if (cell_cmp(start, cell) == 0) {
-                //debug("Drawing start at coordinates %d, %d", i, j);
-                glPushMatrix();
-                glTranslatef(i, j, 0.0);
-                glScalef(0.5, 0.5, 1.0);
-                draw_tile(0);
-                glPopMatrix();
-            }
-            if (cell_cmp(end, cell) == 0) {
-                glPushMatrix();
-                glTranslatef(i, j, 0.0);
-                glScalef(0.5, 0.5, 1.0);
-                draw_tile(1);
-                glPopMatrix();
-            }
-            //for (int d = 0; d < 4; ++d) {
-            //    if (has_wall(maze, cell, dir[d])) {
-            //        //debug("Drawing wall!!!\n %d, %d, %d", i, j, d);
-            //        glPushMatrix();
-            //        glTranslatef(i, j, 0.5);
-            //        glScalef(1.0, 1.0, 2.0);
-            //        if (d % 2 == 0) {
-            //            // Rotating works
-            //            glRotatef(90, 0, 0, 1); 
-            //        }
-            //        draw_wall();
-            //        glPopMatrix();
-            //    }
-            //}
-            //if (has_wall(maze, cell, NORTH)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j, 0.5);
-            //    //glScalef(1.0, 0.1, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, EAST)) {
-            //    glPushMatrix();
-            //    glTranslatef(i+1.0, j, 0.5);
-            //    //glScalef(1.0, 0.1, 1.0);
-            //    glRotatef(90, 0.0, 0.0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, SOUTH)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j+1.0, 0.5);
-            //    //glScalef(1.0, 0.1, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-            //if (has_wall(maze, cell, WEST)) {
-            //    glPushMatrix();
-            //    glTranslatef(i, j, 0.5);
-            //    //glScalef(1.0, 0.1, 1.0);
-            //    glRotatef(90, 0, 0, 1.0);
-            //    draw_wall();
-            //    glPopMatrix();
-            //}
-        }
-    }
+    draw_axes();
+    draw_maze();
     glFlush();
 }
 

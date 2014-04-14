@@ -42,6 +42,9 @@
 #define WINDOW_TITLE "MazeQuest 356"
 #define PHI_INCR 2.0*M_PI/180
 
+/* Enumerated type for tiles. */
+typedef enum {START, END, BREAD} tile_t;
+
 /* OpenGL Initialization */
 void init_gl();
 
@@ -60,11 +63,12 @@ void init_maze();
 
 /* Drawing functions */
 void draw_wall();
-void draw_tile(int);
+void draw_tile(tile_t);
 void draw_maze();
 void print_position();
 
 /* Movement Functions */
+bool check_collision(float, float, int, int);
 void move_forward();
 void move_backward();
 void rotate_clockwise();
@@ -90,11 +94,16 @@ light_t far_light = {
     {0.75, 0.75, 0.75, 1.0}
 };
 
+light_t maze_light = {
+    {5.0, 10.0, 5.0, 0.0},
+    {0.1, 0.1, 0.1, 1.0}
+};
+
 material_t blue_plastic = {
     {0.0f, 0.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 1.0f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
-    1000.0f
+    {1000.0f}
 };
 
 // Globals
@@ -110,6 +119,8 @@ point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
 float speed = 0.1;
+float view_plane_near = 0.1;
+float view_plane_far = 100.0;
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -120,7 +131,8 @@ void debug_eye() {
 int main(int argc, char** argv) {
     // Make sure there are the minimum number of arguments.
     if (argc < 3) {
-        printf("hw3b requires at least 2 arguments!\n\nUsage: ./hw3b nrows ncols [GL options]\n");
+        printf("hw3b requires at least 2 arguments!\n\n"
+               "Usage: ./hw3b nrows ncols [GL options]\n");
 
         return EXIT_FAILURE;
     }
@@ -186,9 +198,10 @@ void init_maze() {
 void init_gl() {
     // Background color.
     
-    glEnable(GL_DEPTH_TEST) ;
-    glEnable(GL_LIGHTING) ;
-    glEnable(GL_LIGHT0) ;
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
     //glShadeModel(GL_SMOOTH) ;
     glClearColor(0.0, 0.0, 0.0, 0.0) ;
@@ -211,7 +224,7 @@ void set_camera() {
         debug("Setting camera to bird view");
         gluLookAt(eye.x, 20.0, eye.z,
                   start->r/2, 0.0, start->c/2,
-                  0.0, 1.0, 0.0);
+                  cos(phi), 0.0, sin(phi));
     }
     else {
         debug("Setting camera");
@@ -246,9 +259,13 @@ void set_camera() {
  */
 void set_lighting() {
     light_t* light = &far_light;
+    light_t* light1 = &maze_light;
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light->color);
     glLightfv(GL_LIGHT0, GL_AMBIENT, BLACK);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light->color);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, light1->color);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, BLACK);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, light1->color);
 }
 
 /** Setup the projection viewport matrix.
@@ -257,8 +274,8 @@ void set_projection_viewport() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    // TODO: Abstract this
-    gluPerspective(60.0, (GLdouble)win_width/win_height, 0.1, 100.0);
+    gluPerspective(60.0, (GLdouble)win_width/win_height, view_plane_near, 
+            view_plane_far);
     //glOrtho(-10, 10, -10, 10, 1, 100);
 
     glViewport(0, 0, win_width, win_height);
@@ -322,15 +339,15 @@ void draw_wall() {
  *  Tiles are a 2x2 square in the xy-plane
  *  centered at the origin.
  */
-void draw_tile(int i) {
+void draw_tile(tile_t tile) {
     float GREEN[4] = {0.0, 1.0, 0.0, 1.0};
     float RED[4] = {1.0, 0.0, 0.0, 1.0};
     float BREAD[4] = {0.5, 0.7, 1.0};
     float* color;
-    if (i == 0) {
+    if (tile == START) {
         color = GREEN;
     }
-    else if (i == 1) {
+    else if (tile == END) {
         color = RED;
     }
     else {
@@ -357,25 +374,28 @@ void draw_maze() {
     for (int i = 0; i < nrows; ++i) {
         for (int j = 0; j < ncols; ++j) {
             cell_t* cell = get_cell(maze, i, j);
+            // Draw the start cell
             if (cell_cmp(start, cell) == 0) {
                 //debug("Drawing start at coordinates %d, %d", i, j);
                 glPushMatrix();
                 glTranslatef(i, 0.0, j);
                 glScalef(0.5, 1.0, 0.5);
-                draw_tile(0);
+                draw_tile(START);
                 glPopMatrix();
             }
+            // Draw the end cell
             if (cell_cmp(end, cell) == 0) {
                 glPushMatrix();
                 glTranslatef(i, 0.0, j);
                 glScalef(0.5, 1.0, 0.5);
-                draw_tile(1);
+                draw_tile(END);
                 glPopMatrix();
             }
+            // Draw the walls.
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
                 glTranslatef(i+0.5, 0.5, j);
-                glScalef(1.0, 1.0, 1.0);
+                //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -383,14 +403,14 @@ void draw_maze() {
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
-                glScalef(1.0, 1.0, 1.0);
+                //glScalef(1.0, 2.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
                 glTranslatef(i-0.5, 0.5, j);
-                glScalef(1.0, 1.0, 1.0);
+                //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
@@ -398,7 +418,7 @@ void draw_maze() {
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
-                glScalef(1.0, 1.0, 1.0);
+                //glScalef(1.0, 2.0, 1.0);
                 draw_wall();
                 glPopMatrix();
             }
@@ -412,7 +432,8 @@ void print_position() {
     char* s;
     asprintf(&s,
             "Position: %.4f, %.4f\n"
-            "Heading: %.4f\n", eye.x, eye.z, phi);
+            "Heading (deg): %.4f\n", 
+            eye.x, eye.z, phi*180/M_PI);
 
     glDisable(GL_LIGHTING);
     glColor3f(1.0, 1.0, 1.0);
@@ -436,25 +457,74 @@ void print_position() {
     free(s);
 }
 
+/** Check to see if moving will collide with a wall.
+ *
+ *  @param x the x coordinate of the new position.
+ *  @param z the z coordinate of the new position.
+ *  @param cur_row the row that we are moving from.
+ *  @param cur_col the col that we are moving from.
+ *
+ *  @return true if the new position collides with a wall,
+ *      false otherwise.
+ */
+bool check_collision(float x, float z, int cur_row, int cur_col) {
+    cell_t* cell = get_cell(maze, cur_row, cur_col);
+    debug("Row, col: %d, %d", cur_row, cur_col);
+    if (cur_row + .375 < x && x < cur_row + 0.625) {
+        return (has_wall(maze, cell, NORTH));
+    }
+    if (cur_row - 0.625 < x && x < cur_row - 0.375) {
+        return (has_wall(maze, cell, SOUTH));
+    }
+    if (z < cur_col + 0.625 && cur_col + 0.375 < z) {
+        return (has_wall(maze, cell, EAST));
+    }
+    if (cur_col - 0.625 < z && z < cur_col - 0.375) {
+        return (has_wall(maze, cell, WEST));
+    }
+    return false;
+}
+
+/** Move the eye forward by speed.
+ */
 void move_forward() {
     if (!bird_eye) {
-        debug("Moving forward");
-        eye.x += speed * cos(phi);
-        eye.z += speed * sin(phi);
+        float new_x = eye.x + speed * cos(phi);
+        float new_z = eye.z + speed * sin(phi);
+        int r = (int) eye.x;
+        int c = (int) eye.z;
+        if (!check_collision(new_x, new_z, r, c)) {
+            eye.x = new_x;
+            eye.z = new_z;
+        }
+        else {
+            debug("Collision!");
+        }
     }
 }
 
+/** Move the eye backward by speed.
+ */
 void move_backward() {
     if (!bird_eye) {
-        debug("Moving backward!");
-        eye.x -= speed * cos(phi);
-        eye.z -= speed * sin(phi);
+        float new_x = eye.x - speed * cos(phi);
+        float new_z = eye.z - speed * sin(phi);
+        int r = (int) floor(eye.x);
+        int c = (int) floor(eye.z);
+        if (!check_collision(new_x, new_z, r, c)) {
+            eye.x = new_x;
+            eye.z = new_z;
+        }
+        else{
+            debug("Collision!");
+        }
     }
 }
 
+/** Rotate the angle from north clockwise.
+ */
 void rotate_clockwise() {
     if (!bird_eye) {
-        debug("Turing right!");
         phi += PHI_INCR;
         if (phi >= 2*M_PI) {
             phi -= 2*M_PI;
@@ -462,9 +532,10 @@ void rotate_clockwise() {
     }
 }
 
+/** Rotate the angle from north counterclockwise.
+ */
 void rotate_counter_clockwise() {
     if (!bird_eye) {
-        debug("Turing left");
         phi -= PHI_INCR;
         if (phi < 0) {
             phi += 2*M_PI;

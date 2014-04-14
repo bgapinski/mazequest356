@@ -289,7 +289,7 @@ void set_projection_viewport() {
  *  centered at the origin.
  */
 void draw_wall() {
-    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
 
     glBegin(GL_QUADS);
     // positive z plane
@@ -399,8 +399,6 @@ void draw_maze() {
                 glTranslatef(i+0.5, 0.5, j);
                 //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
-                float color[4] = {0.0,1.0,0.0,1.0};
-                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -409,8 +407,6 @@ void draw_maze() {
                 glTranslatef(i, 0.5, j+0.5);
                 //glScalef(1.0, 2.0, 1.0);
                 //
-                float color[4] = {1.0,0.0,0.0,1.0};
-                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -419,8 +415,6 @@ void draw_maze() {
                 glTranslatef(i-0.5, 0.5, j);
                 //glScalef(1.0, 2.0, 1.0);
                 glRotatef(90, 0.0, 1.0, 0.0);
-                float color[4] = {0.0,1.0,0.0,1.0};
-                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -428,8 +422,6 @@ void draw_maze() {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
                 //glScalef(1.0, 2.0, 1.0);
-                float color[4] = {1.0,0.0,0.0,1.0};
-                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
                 draw_wall();
                 glPopMatrix();
             }
@@ -469,6 +461,11 @@ void print_position() {
 }
 
 /** Check to see if moving will collide with a wall.
+ *  Cells are centerd on integers which places walls
+ *  on the n.5 lines. Since walls are .25 units
+ *  thick, we check if our position is in
+ *  the range n.375 to n.625 or the range
+ *  (n-1).875 to n.125.
  *
  *  @param x the x coordinate of the new position.
  *  @param z the z coordinate of the new position.
@@ -586,23 +583,20 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
 
+    // Additional movement keys.
     switch(key) {
-        case 'W':
         case 'w':
         case 'k':
             move_forward();
             break;
-        case 'S':
         case 's':
         case 'j':
             move_backward();
             break;
-        case 'D':
         case 'd':
         case 'l':
             rotate_clockwise();
             break;
-        case 'A':
         case 'a':
         case 'h':
             rotate_counter_clockwise();

@@ -85,8 +85,15 @@ typedef struct _light_t {
 GLfloat BLACK[4] = {0.0, 0.0, 0.0, 1.0};
 
 light_t far_light = {
-    {20.0, 10.0, 0.0, 0.0},
+    {50.0, 50.0, 50.0, 0.0},
     {0.75, 0.75, 0.75, 1.0}
+};
+
+material_t blue_plastic = {
+    {0.0f, 0.0f, 1.0f, 1.0f},
+    {0.0f, 0.0f, 1.0f, 1.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    1000.0f
 };
 
 // Globals
@@ -159,7 +166,7 @@ void init_maze() {
     // Use the current time as the seed
     //long seed;
     //time(&seed);
-    long seed = 5555;
+    long seed = 0;
 
     maze = make_maze(nrows, ncols, seed);
 
@@ -262,10 +269,7 @@ void set_projection_viewport() {
  *  centered at the origin.
  */
 void draw_wall() {
-    // TODO: Move colors to material type
-    float color[4] = {0.0, 0.0, 1.0, 1.0};
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
 
     glBegin(GL_QUADS);
     // z = 1 plane
@@ -369,31 +373,31 @@ void draw_maze() {
             }
             if (has_wall(maze, cell, NORTH)) {
                 glPushMatrix();
-                glTranslatef(i, 0.5, j);
+                glTranslatef(i+0.5, 0.5, j);
                 glScalef(1.0, 1.0, 1.0);
+                glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
-                glTranslatef(i, 0.5, j);
+                glTranslatef(i, 0.5, j+0.5);
                 glScalef(1.0, 1.0, 1.0);
-                glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
                 glPushMatrix();
-                glTranslatef(i, 0.5, j+1.0);
+                glTranslatef(i-0.5, 0.5, j);
                 glScalef(1.0, 1.0, 1.0);
+                glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
             }
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
-                glTranslatef(i+1.0, 0.5, j);
+                glTranslatef(i, 0.5, j-0.5);
                 glScalef(1.0, 1.0, 1.0);
-                glRotatef(90, 0.0, 1.0, 0.0);
                 draw_wall();
                 glPopMatrix();
             }

@@ -434,6 +434,8 @@ void draw_maze_tiles() {
     draw_tile(END);
     glPopMatrix();
 
+    // Draw bread crumbs.
+    // This isn't very efficient but we don't have a set :(
     for (int r = 0; r < nrows; ++r) {
         for (int c = 0; c < ncols; ++c) {
             if (visited[r][c] == 1) {
@@ -604,7 +606,7 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
 
-    // Additional movement keys.
+    // Additional movement keys. I like vim movement so those are added.
     switch(key) {
         case 'w':
         case 'k':

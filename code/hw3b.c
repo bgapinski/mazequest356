@@ -202,9 +202,8 @@ int main(int argc, char** argv) {
  */
 void init_maze() {
     // Use the current time as the seed
-    //long seed;
-    //time(&seed);
-    long seed = 0;
+    long seed;
+    time(&seed);
 
     maze = make_maze(nrows, ncols, seed);
 

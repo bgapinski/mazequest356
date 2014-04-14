@@ -596,6 +596,48 @@ void rotate_counter_clockwise() {
 }
 
 
+void strafe_right() 
+{
+  if (!bird_eye) 
+    {
+      float new_x = eye.x + speed * cos(phi + PHI_INCR*45);
+      float new_z = eye.z + speed * sin(phi + PHI_INCR*45);
+      int r = (int) round(eye.x);
+      int c = (int) round(eye.z);
+      if (!check_collision(new_x, new_z, r, c)) 
+	{
+	  eye.x = new_x;
+	  eye.z = new_z;
+	  visited[r][c] = 1;
+        }
+      else
+	{
+	  debug("Collision!");
+        }
+    }
+}
+
+void strafe_left() 
+{
+  if (!bird_eye) 
+    {
+      float new_x = eye.x - speed * cos(phi + PHI_INCR*45);
+      float new_z = eye.z - speed * sin(phi + PHI_INCR*45);
+      int r = (int) round(eye.x);
+      int c = (int) round(eye.z);
+      if (!check_collision(new_x, new_z, r, c)) 
+	{
+	  eye.x = new_x;
+	  eye.z = new_z;
+	  visited[r][c] = 1;
+        }
+      else
+	{
+	  debug("Collision!");
+        }
+    }
+}
+
 /** Draw the screen
  */
 void handle_display() {
@@ -627,29 +669,37 @@ void handle_reshape(int w, int h) {
  */
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
-
     // Additional movement keys. I like vim movement so those are added.
-    switch(key) {
-        case 'w':
-        case 'k':
-            move_forward();
-            break;
-        case 's':
-        case 'j':
-            move_backward();
-            break;
-        case 'd':
-        case 'l':
-            rotate_clockwise();
-            break;
-        case 'a':
-        case 'h':
-            rotate_counter_clockwise();
-            break;
-        case ' ':
-            bird_eye = !bird_eye;
-            break;
-    }
+    switch(key) 
+      {
+      case 'w':
+      case 'k':
+	move_forward();
+	break;
+      case 's':
+      case 'j':
+	move_backward();
+	break;
+      case 'd':
+      case 'l':
+	rotate_clockwise();
+	break;
+      case 'a':
+      case 'h':
+	rotate_counter_clockwise();
+	break;
+      case 'q':
+      case 'u':
+	strafe_left();
+	break;
+      case 'e':
+      case 'o':
+	strafe_right();
+	break;
+      case ' ':
+	bird_eye = !bird_eye;
+	break;
+      }
     set_camera();
     glutPostRedisplay() ;
 }

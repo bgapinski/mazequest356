@@ -54,6 +54,7 @@ void handle_reshape(int, int) ;
 void handle_key(unsigned char key, int x, int y) ;
 void handle_special_key(int key, int x, int y) ;
 void handle_close();
+void no_op();
 
 /* Functions */
 void set_camera();
@@ -67,6 +68,7 @@ void draw_tile(GLfloat*);
 void draw_maze_walls();
 void draw_maze_tiles();
 void print_position();
+void print_victory();
 
 /* Movement Functions */
 bool check_collision(float, float, int, int);
@@ -492,6 +494,43 @@ void print_position() {
     free(s);
 }
 
+/** Prints the victory screen. Will only be called if the player
+ *  makes it to the end cell.
+ */
+void print_victory() {
+    debug("Congratulations, you have solved the maze!");
+    glutDisplayFunc(no_op);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    char* s;
+    asprintf(&s,
+            "Congratulations!\n"
+            "You have conquered the maze!");
+
+    glDisable(GL_LIGHTING);
+    glColor3f(1.0, 1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, win_width, 0, win_height);
+
+    glRasterPos2s(win_width/4.0, win_width/2.0);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, (unsigned char*)s);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+
+    free(s);
+    glFlush();
+}
+
 /** Check to see if moving will collide with a wall.
  *  Cells are centerd on integers which places walls
  *  on the n.5 lines. Since walls are .25 units
@@ -507,6 +546,7 @@ void print_position() {
  *  @return true if the new position collides with a wall,
  *      false otherwise.
  */
+// TODO: Use has passage for detection instead of has wall.
 bool check_collision(float x, float z, int cur_row, int cur_col) {
     cell_t* cell = get_cell(maze, cur_row, cur_col);
     debug("Row, col: %d, %d", cur_row, cur_col);
@@ -556,6 +596,9 @@ void move(move_t dir) {
             eye.x = new_x;
             eye.z = new_z;
             visited[r][c] = 1;
+            if (end->c == c && end->r == r) {
+                print_victory();
+            }
         }
         else {
             debug("Collision!");
@@ -685,4 +728,9 @@ void handle_close() {
     }
     free(visited);
     printf("Goodbye!\n");
+}
+
+/** No op function.
+ */
+void no_op() {
 }

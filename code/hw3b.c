@@ -42,6 +42,9 @@
 #define WINDOW_TITLE "MazeQuest 356"
 #define PHI_INCR 2.0*M_PI/180
 
+// Enumerated Types.
+typedef enum {FORWARD, BACKWARD, STRAFE_LEFT, STRAFE_RIGHT} move_t;
+
 /* OpenGL Initialization */
 void init_gl();
 
@@ -67,8 +70,7 @@ void print_position();
 
 /* Movement Functions */
 bool check_collision(float, float, int, int);
-void move_forward();
-void move_backward();
+void move(move_t);
 void rotate_clockwise();
 void rotate_counter_clockwise();
 
@@ -126,9 +128,6 @@ material_t bread_crumb = {
     {1.0f, 1.0f, 1.0f, 1.0f},
     {0.0f}
 };
-
-// Enumerated Types.
-typedef enum {FORWARD, BACKWARD, STRAFE_LEFT, STRAFE_RIGHT} move_t;
 
 // Globals
 int win_width, win_height ;
@@ -545,12 +544,12 @@ void move(move_t dir) {
                 new_z = eye.z - speed * sin(phi);
                 break;
             case STRAFE_LEFT:
-                new_x = eye.x - speed * cos(phi + 90);
-                new_z = eye.z - speed * sin(phi + 90);
+                new_x = eye.x - speed * cos(phi + M_PI/2);
+                new_z = eye.z - speed * sin(phi + M_PI/2);
                 break;
             case STRAFE_RIGHT:
-                new_x = eye.x + speed * cos(phi + 90);
-                new_z = eye.z + speed * sin(phi + 90);
+                new_x = eye.x + speed * cos(phi + M_PI/2);
+                new_z = eye.z + speed * sin(phi + M_PI/2);
                 break;
         }
         if (!check_collision(new_x, new_z, r, c)) {

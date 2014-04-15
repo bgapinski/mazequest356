@@ -42,9 +42,6 @@
 #define WINDOW_TITLE "MazeQuest 356"
 #define PHI_INCR 2.0*M_PI/180
 
-/* Enumerated type for tiles. */
-typedef enum {START, END, BREAD} tile_t;
-
 /* OpenGL Initialization */
 void init_gl();
 
@@ -63,7 +60,7 @@ void init_maze();
 
 /* Drawing functions */
 void draw_wall();
-void draw_tile(tile_t);
+void draw_tile(GLfloat*);
 void draw_maze_walls();
 void draw_maze_tiles();
 void print_position();
@@ -368,20 +365,24 @@ void draw_wall() {
 /** Draws the basic tile surface.
  *  Tiles are a 2x2 square in the xy-plane
  *  centered at the origin.
+ *
+ *  @param color the color to draw the tile.
  */
-void draw_tile(tile_t tile) {
-    if (tile == START) {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);
-    }
-    else if (tile == END) {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, end_tile.diffuse);
-    }
-    else if (tile == BREAD) {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, bread_crumb.diffuse);
-    }
-    else {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, BLACK);
-    }
+void draw_tile(GLfloat* color) {
+    //if (tile == START) {
+    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);
+    //}
+    //else if (tile == END) {
+    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, end_tile.diffuse);
+    //}
+    //else if (tile == BREAD) {
+    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, bread_crumb.diffuse);
+    //}
+    //else {
+    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, BLACK);
+    //}
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
     glBegin(GL_QUADS);
 
@@ -446,14 +447,14 @@ void draw_maze_tiles() {
     glPushMatrix();
     glTranslatef(start->r, 0.0, start->c);
     glScalef(0.5, 1.0, 0.5);
-    draw_tile(START);
+    draw_tile(start_tile.diffuse);
     glPopMatrix();
 
     // Draw the end tile.
     glPushMatrix();
     glTranslatef(end->r, 0.0, end->c);
     glScalef(0.5, 1.0, 0.5);
-    draw_tile(END);
+    draw_tile(end_tile.diffuse);
     glPopMatrix();
 
     // Draw bread crumbs.
@@ -464,7 +465,7 @@ void draw_maze_tiles() {
                 glPushMatrix();
                 glTranslatef(r, 0.0001, c); //Let the tiles sit atop the start cell.
                 glScalef(0.125, 2.0, 0.125);
-                draw_tile(BREAD);
+                draw_tile(bread_crumb.diffuse);
                 glPopMatrix();
             }
         }

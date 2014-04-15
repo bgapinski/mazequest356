@@ -127,6 +127,9 @@ material_t bread_crumb = {
     {0.0f}
 };
 
+// Enumerated Types.
+typedef enum {FORWARD, BACKWARD, STRAFE_LEFT, STRAFE_RIGHT} move_t;
+
 // Globals
 int win_width, win_height ;
 int nrows, ncols;
@@ -369,19 +372,6 @@ void draw_wall() {
  *  @param color the color to draw the tile.
  */
 void draw_tile(GLfloat* color) {
-    //if (tile == START) {
-    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);
-    //}
-    //else if (tile == END) {
-    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, end_tile.diffuse);
-    //}
-    //else if (tile == BREAD) {
-    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, bread_crumb.diffuse);
-    //}
-    //else {
-    //    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, BLACK);
-    //}
-    
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
     glBegin(GL_QUADS);
@@ -536,39 +526,39 @@ bool check_collision(float x, float z, int cur_row, int cur_col) {
     return false;
 }
 
-/** Move the eye forward by speed.
+/** Handles movement of the eye.
+ *  
+ *  @param dir the direction we are moving.
  */
-void move_forward() {
+void move(move_t dir) {
     if (!bird_eye) {
-        float new_x = eye.x + speed * cos(phi);
-        float new_z = eye.z + speed * sin(phi);
+        float new_x, new_z;
         int r = (int) round(eye.x);
         int c = (int) round(eye.z);
+        switch (dir) {
+            case FORWARD:
+                new_x = eye.x + speed * cos(phi);
+                new_z = eye.z + speed * sin(phi);
+                break;
+            case BACKWARD:
+                new_x = eye.x - speed * cos(phi);
+                new_z = eye.z - speed * sin(phi);
+                break;
+            case STRAFE_LEFT:
+                new_x = eye.x - speed * cos(phi + 90);
+                new_z = eye.z - speed * sin(phi + 90);
+                break;
+            case STRAFE_RIGHT:
+                new_x = eye.x + speed * cos(phi + 90);
+                new_z = eye.z + speed * sin(phi + 90);
+                break;
+        }
         if (!check_collision(new_x, new_z, r, c)) {
             eye.x = new_x;
             eye.z = new_z;
             visited[r][c] = 1;
         }
         else {
-            debug("Collision!");
-        }
-    }
-}
-
-/** Move the eye backward by speed.
- */
-void move_backward() {
-    if (!bird_eye) {
-        float new_x = eye.x - speed * cos(phi);
-        float new_z = eye.z - speed * sin(phi);
-        int r = (int) round(eye.x);
-        int c = (int) round(eye.z);
-        if (!check_collision(new_x, new_z, r, c)) {
-            eye.x = new_x;
-            eye.z = new_z;
-            visited[r][c] = 1;
-        }
-        else{
             debug("Collision!");
         }
     }
@@ -592,45 +582,6 @@ void rotate_counter_clockwise() {
         phi -= PHI_INCR;
         if (phi < 0) {
             phi += 2*M_PI;
-        }
-    }
-}
-
-
-/** moves the eye to the right without changing the heading.
- */
-void strafe_right() {
-    if (!bird_eye) {
-        float new_x = eye.x + speed * cos(phi + 90);
-        float new_z = eye.z + speed * sin(phi + 90);
-        int r = (int) round(eye.x);
-        int c = (int) round(eye.z);
-        if (!check_collision(new_x, new_z, r, c)) {
-            eye.x = new_x;
-            eye.z = new_z;
-            visited[r][c] = 1;
-        }
-        else {
-            debug("Collision!");
-        }
-    }
-}
-
-/** Moves the eye left without changing the heading.
- */
-void strafe_left() {
-    if (!bird_eye) {
-        float new_x = eye.x - speed * cos(phi + 90);
-        float new_z = eye.z - speed * sin(phi + 90);
-        int r = (int) round(eye.x);
-        int c = (int) round(eye.z);
-        if (!check_collision(new_x, new_z, r, c)) {
-            eye.x = new_x;
-            eye.z = new_z;
-            visited[r][c] = 1;
-        }
-        else {
-            debug("Collision!");
         }
     }
 }
@@ -670,11 +621,11 @@ void handle_key(unsigned char key, int x, int y) {
     switch(key) {
         case 'w':
         case 'k':
-            move_forward();
+            move(FORWARD);
             break;
         case 's':
         case 'j':
-            move_backward();
+            move(BACKWARD);
             break;
         case 'd':
         case 'l':
@@ -686,11 +637,11 @@ void handle_key(unsigned char key, int x, int y) {
             break;
         case 'q':
         case 'u':
-            strafe_left();
+            move(STRAFE_LEFT);
             break;
         case 'e':
         case 'o':
-            strafe_right();
+            move(STRAFE_RIGHT);
             break;
         case ' ':
             bird_eye = !bird_eye;
@@ -710,10 +661,10 @@ void handle_special_key(int key, int x, int y) {
     debug("handle_special_key()\n") ;
     switch(key) {
         case GLUT_KEY_UP:       // Move eye up.
-            move_forward();
+            move(FORWARD);
             break;
         case GLUT_KEY_DOWN:     // Move eye down.
-            move_backward();
+            move(BACKWARD);
             break;
         case GLUT_KEY_LEFT:
             rotate_counter_clockwise();

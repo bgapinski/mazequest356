@@ -469,7 +469,8 @@ void draw_maze_tiles() {
         for (int c = 0; c < ncols; ++c) {
             if (visited[r][c] == 1) {
                 glPushMatrix();
-                glTranslatef(r, 0.0001, c); //Let the tiles sit atop the start cell.
+                //Let the tiles sit atop the start cell with depth checking.
+                glTranslatef(r, 0.0001, c);
                 glScalef(0.125, 2.0, 0.125);
                 glCallList(dlist_id_tile);
                 glPopMatrix();
@@ -564,17 +565,18 @@ void print_victory() {
 bool check_collision(float x, float z, int cur_row, int cur_col) {
     cell_t* cell = get_cell(maze, cur_row, cur_col);
     debug("Row, col: %d, %d", cur_row, cur_col);
-    if (cur_row + .375 <= x && x <= cur_row + 0.625) {
-        return (has_wall(maze, cell, NORTH));
+    // The corners where two walls meet have poor detection.
+    if (cur_row + 0.375 <= x && x <= cur_row + 0.625) {
+        return has_wall(maze, cell, NORTH);
     }
     if (cur_row - 0.625 <= x && x <= cur_row - 0.375) {
-        return (has_wall(maze, cell, SOUTH));
+        return has_wall(maze, cell, SOUTH);
     }
-    if (z <= cur_col + 0.625 && cur_col + 0.375 <= z) {
-        return (has_wall(maze, cell, EAST));
+    if (cur_col + 0.375 <= z && z <= cur_col + 0.625)  {
+        return has_wall(maze, cell, EAST);
     }
     if (cur_col - 0.625 <= z && z <= cur_col - 0.375) {
-        return (has_wall(maze, cell, WEST));
+        return has_wall(maze, cell, WEST);
     }
     return false;
 }

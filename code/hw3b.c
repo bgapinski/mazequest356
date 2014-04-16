@@ -265,7 +265,7 @@ void set_camera() {
     if (bird_eye) {
         debug("Setting camera to bird view");
         gluLookAt(eye.x, 20.0, eye.z,
-                  nrows/2, 0.0, ncols/2,
+                  eye.x, 0.0, eye.z,
                   cos(phi), 0.0, sin(phi));
     }
     else {

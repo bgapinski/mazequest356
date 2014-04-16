@@ -41,6 +41,7 @@
 #define DEFAULT_WINDOW_YORIG 0
 #define WINDOW_TITLE "MazeQuest 356"
 #define PHI_INCR 2.0*M_PI/180
+#define JUMP_TIME 20 //how long it takes to jump
 
 // Enumerated Types.
 typedef enum {FORWARD, BACKWARD, STRAFE_LEFT, STRAFE_RIGHT} move_t;
@@ -75,6 +76,8 @@ bool check_collision(float, float, int, int);
 void move(move_t);
 void rotate_clockwise();
 void rotate_counter_clockwise();
+void animate_jump();
+void animate_fall();
 
 // Type of materials
 typedef struct _material_t {
@@ -267,13 +270,7 @@ void set_camera() {
     glLoadIdentity();
     debug_eye();
     debug("Heading: %f\n", phi*180/M_PI);
-    if (bird_eye) {
-        debug("Setting camera to bird view");
-        gluLookAt(eye.x, jump_height, eye.z,
-                  look_at.x, 0.0, look_at.z,
-                  0.0, 1.0, 0.0);
-    }
-    else {
+    if (!bird_eye) {
         debug("Setting camera");
         look_at.x = eye_radius * cos(phi) + eye.x;
         look_at.y = eye.y;
@@ -652,68 +649,34 @@ void rotate_counter_clockwise() {
 /**Used to set the view point when jumping
    @param i the current height
  */
-void jump(int i)
-{
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  gluLookAt(eye.x, i, eye.z,
-	    eye.x, 0.0, eye.z,
-	    cos(phi), 0.0, sin(phi));
-  glutPostRedisplay() ;
+void jump(int i) {
+    if (i == 0) {
+        set_camera();
+    }
+    else {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        gluLookAt(eye.x, i, eye.z,
+                look_at.x, 0.0, look_at.z,
+                0.0, 1.0, 0.0);
+    }
+    glutPostRedisplay() ;
 }
 
 /**Animates the jump up to view the maze
  */
-void animate_jump() 
-{
-  glutTimerFunc(5, (*jump), 0);
-  glutTimerFunc(50, (*jump), 1);
-  glutTimerFunc(100, (*jump), 2);
-  glutTimerFunc(150, (*jump), 3);
-  glutTimerFunc(200, (*jump), 4);
-  glutTimerFunc(250, (*jump), 5);
-  glutTimerFunc(300, (*jump), 6);
-  glutTimerFunc(350, (*jump), 7);
-  glutTimerFunc(400, (*jump), 8);
-  glutTimerFunc(450, (*jump), 9);
-  glutTimerFunc(500, (*jump), 10);
-  glutTimerFunc(550, (*jump), 11);
-  glutTimerFunc(600, (*jump), 12);
-  glutTimerFunc(650, (*jump), 13);
-  glutTimerFunc(700, (*jump), 14);
-  glutTimerFunc(750, (*jump), 15);
-  glutTimerFunc(800, (*jump), 16);
-  glutTimerFunc(850, (*jump), 17);
-  glutTimerFunc(900, (*jump), 18);
-  glutTimerFunc(950, (*jump), 19);
-  glutTimerFunc(1000, (*jump), 20); 
- }
+void animate_jump() {
+    for (int i = 0; i <= JUMP_TIME; ++i) {
+        glutTimerFunc(50*i, (*jump), i);
+    }
+}
 
 /** animate the fall back down to the maze.
  */
 void animate_fall() {
-  glutTimerFunc(5, (*jump), 20);
-  glutTimerFunc(50, (*jump), 19);
-  glutTimerFunc(100, (*jump), 18);
-  glutTimerFunc(150, (*jump), 17);
-  glutTimerFunc(200, (*jump), 16);
-  glutTimerFunc(250, (*jump), 15);
-  glutTimerFunc(300, (*jump), 14);
-  glutTimerFunc(350, (*jump), 13);
-  glutTimerFunc(400, (*jump), 12);
-  glutTimerFunc(450, (*jump), 11);
-  glutTimerFunc(500, (*jump), 10);
-  glutTimerFunc(550, (*jump), 9);
-  glutTimerFunc(600, (*jump), 8);
-  glutTimerFunc(650, (*jump), 7);
-  glutTimerFunc(700, (*jump), 6);
-  glutTimerFunc(750, (*jump), 5);
-  glutTimerFunc(800, (*jump), 4);
-  glutTimerFunc(850, (*jump), 3);
-  glutTimerFunc(900, (*jump), 2);
-  glutTimerFunc(950, (*jump), 1);
-  glutTimerFunc(999, (*set_camera), 0);
-  glutTimerFunc(1000, (*glutPostRedisplay), 0);
+    for (int i = 0; i <= JUMP_TIME; ++i) {
+        glutTimerFunc(50*i, (*jump), JUMP_TIME-i);
+    }
 }
 
 /** Draw the screen

@@ -156,6 +156,7 @@ float speed = 0.1;
 int jump_height = 20; //Default jump height.
 int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
 bool victory = false; // If we have completed the maze or not.
+bool jumping = false; // Whether we are mid jump or not.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -674,6 +675,9 @@ void jump(int i) {
         bird_eye = false;
         set_camera();
     }
+    else if (i == -1) {
+        jumping = false;
+    }
     else {
         bird_eye = true;
         glMatrixMode(GL_MODELVIEW);
@@ -688,18 +692,21 @@ void jump(int i) {
 /**Animates the jump up to view the maze
  */
 void animate_jump() {
-    bird_eye = true;
+    jumping = true;
     for (int i = 0; i <= jump_height; ++i) {
         glutTimerFunc(50*i, (*jump), i);
     }
+    glutTimerFunc(50*jump_height, (*jump), -1);
 }
 
 /** animate the fall back down to the maze.
  */
 void animate_fall() {
+    jumping = true;
     for (int i = 0; i <= jump_height; ++i) {
         glutTimerFunc(50*i, (*jump), jump_height-i);
     }
+    glutTimerFunc(50*jump_height, (*jump), -1);
 }
 
 /** Draw the screen
@@ -761,11 +768,13 @@ void handle_key(unsigned char key, int x, int y) {
             move(STRAFE_RIGHT);
             break;
         case ' ':
-            if(!bird_eye) {
-                animate_jump();
-            }
-            else {
-                animate_fall();
+            if (!jumping) {
+                if(!bird_eye) {
+                    animate_jump();
+                }
+                else {
+                    animate_fall();
+                }
             }
             break;
         case '\r':

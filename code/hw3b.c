@@ -649,6 +649,73 @@ void rotate_counter_clockwise() {
     }
 }
 
+/**Used to set the view point when jumping
+   @param i the current height
+ */
+void jump(int i)
+{
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(eye.x, i, eye.z,
+	    eye.x, 0.0, eye.z,
+	    cos(phi), 0.0, sin(phi));
+  glutPostRedisplay() ;
+}
+
+/**Animates the jump up to view the maze
+ */
+void animate_jump() 
+{
+  glutTimerFunc(5, (*jump), 0);
+  glutTimerFunc(50, (*jump), 1);
+  glutTimerFunc(100, (*jump), 2);
+  glutTimerFunc(150, (*jump), 3);
+  glutTimerFunc(200, (*jump), 4);
+  glutTimerFunc(250, (*jump), 5);
+  glutTimerFunc(300, (*jump), 6);
+  glutTimerFunc(350, (*jump), 7);
+  glutTimerFunc(400, (*jump), 8);
+  glutTimerFunc(450, (*jump), 9);
+  glutTimerFunc(500, (*jump), 10);
+  glutTimerFunc(550, (*jump), 11);
+  glutTimerFunc(600, (*jump), 12);
+  glutTimerFunc(650, (*jump), 13);
+  glutTimerFunc(700, (*jump), 14);
+  glutTimerFunc(750, (*jump), 15);
+  glutTimerFunc(800, (*jump), 16);
+  glutTimerFunc(850, (*jump), 17);
+  glutTimerFunc(900, (*jump), 18);
+  glutTimerFunc(950, (*jump), 19);
+  glutTimerFunc(1000, (*jump), 20); 
+ }
+
+/** animate the fall back down to the maze.
+ */
+void animate_fall() {
+  glutTimerFunc(5, (*jump), 20);
+  glutTimerFunc(50, (*jump), 19);
+  glutTimerFunc(100, (*jump), 18);
+  glutTimerFunc(150, (*jump), 17);
+  glutTimerFunc(200, (*jump), 16);
+  glutTimerFunc(250, (*jump), 15);
+  glutTimerFunc(300, (*jump), 14);
+  glutTimerFunc(350, (*jump), 13);
+  glutTimerFunc(400, (*jump), 12);
+  glutTimerFunc(450, (*jump), 11);
+  glutTimerFunc(500, (*jump), 10);
+  glutTimerFunc(550, (*jump), 9);
+  glutTimerFunc(600, (*jump), 8);
+  glutTimerFunc(650, (*jump), 7);
+  glutTimerFunc(700, (*jump), 6);
+  glutTimerFunc(750, (*jump), 5);
+  glutTimerFunc(800, (*jump), 4);
+  glutTimerFunc(850, (*jump), 3);
+  glutTimerFunc(900, (*jump), 2);
+  glutTimerFunc(950, (*jump), 1);
+  glutTimerFunc(999, (*set_camera), 0);
+  glutTimerFunc(1000, (*glutPostRedisplay), 0);
+}
+
 /** Draw the screen
  */
 void handle_display() {
@@ -708,8 +775,14 @@ void handle_key(unsigned char key, int x, int y) {
             move(STRAFE_RIGHT);
             break;
         case ' ':
-            bird_eye = !bird_eye;
-            break;
+    	    if(!bird_eye) {
+    	      animate_jump();
+    	    }
+    	    else {
+    	      animate_fall();
+    	    }
+    	    bird_eye = !bird_eye;
+    	    break;
     }
     set_camera();
     glutPostRedisplay() ;

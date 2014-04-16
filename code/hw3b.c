@@ -103,11 +103,11 @@ light_t far_light = {
 light_t maze_light;
 
 // Define some materials.
-material_t blue_plastic = {
+material_t wall = {
     {0.0f, 0.0f, 1.0f, 1.0f},
     {0.0f, 0.0f, 1.0f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
-    {1000.0f}
+    {0.0f}
 };
 
 material_t start_tile = {
@@ -125,15 +125,15 @@ material_t end_tile = {
 };
 
 material_t bread_crumb = {
-    {0.3984f, 0.1992f, 0.0f, 1.0f},
-    {0.3984f, 0.1992f, 0.0f, 1.0f},
+    {0.8007f, 0.5820f, 0.0468f, 1.0f},
+    {0.8007f, 0.5820f, 0.0468f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
     {0.0f}
 };
 
 material_t floor_tile = {
-    {0.2f, 0.2f, 0.2f, 1.0f},
-    {0.2f, 0.2f, 0.2f, 1.0f},
+    {0.1562f, 0.1562f, 0.1562f, 1.0f},
+    {0.1562f, 0.1562f, 0.1562f, 1.0f},
     {1.0f, 1.0f, 1.0f, 1.0f},
     {0.0f}
 };
@@ -339,7 +339,7 @@ void set_projection_viewport() {
  *  centered at the origin.
  */
 void draw_wall() {
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, blue_plastic.diffuse);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, wall.diffuse);
 
     glBegin(GL_QUADS);
     // positive z plane

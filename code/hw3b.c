@@ -131,6 +131,13 @@ material_t bread_crumb = {
     {0.0f}
 };
 
+material_t floor_tile = {
+    {0.2f, 0.2f, 0.2f, 1.0f},
+    {0.2f, 0.2f, 0.2f, 1.0f},
+    {1.0f, 1.0f, 1.0f, 1.0f},
+    {0.0f}
+};
+
 // Globals
 int win_width, win_height ;
 float view_plane_near = 0.1;
@@ -447,6 +454,15 @@ void draw_maze_walls() {
 void draw_maze_tiles() {
 
     glMatrixMode(GL_MODELVIEW);
+
+    // Draw the floor tile
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, floor_tile.diffuse);
+    glPushMatrix();
+    // Center the floor
+    glTranslatef(nrows/2.0-0.5, -0.001, ncols/2.0-0.5);
+    glScalef(nrows/2.0, 1.0, ncols/2.0);
+    glCallList(dlist_id_tile);
+    glPopMatrix();
 
     // Draw the start tile.
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);

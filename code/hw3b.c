@@ -97,10 +97,7 @@ light_t far_light = {
     {0.75, 0.75, 0.75, 1.0}
 };
 
-light_t maze_light = {
-    {5.0, 10.0, 5.0, 0.0},
-    {0.1, 0.1, 0.1, 1.0}
-};
+light_t maze_light;
 
 // Define some materials.
 material_t blue_plastic = {
@@ -225,6 +222,13 @@ void init_maze() {
     for (int r = 0; r < nrows; ++r) {
         visited[r] = calloc(ncols, sizeof(int));
     }
+
+    // Set a light at the center of the maze.
+    light_t light = {
+        {nrows/2.0, 50.0, ncols/2.0, 0.0},
+        {0.25, 0.25, 0.25, 1.0}
+    };
+    maze_light = light;
 }
 
 /**  init_gl:  Initialize OpenGL.
@@ -650,6 +654,7 @@ void rotate_counter_clockwise() {
 void handle_display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLightfv(GL_LIGHT0, GL_POSITION, far_light.position);
+    glLightfv(GL_LIGHT1, GL_POSITION, maze_light.position);
     draw_maze_walls();
     draw_maze_tiles();
     print_position();

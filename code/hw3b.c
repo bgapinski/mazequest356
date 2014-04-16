@@ -41,7 +41,6 @@
 #define DEFAULT_WINDOW_YORIG 0
 #define WINDOW_TITLE "MazeQuest 356"
 #define PHI_INCR 2.0*M_PI/180
-#define JUMP_TIME 20 //how long it takes to jump
 
 // Enumerated Types.
 typedef enum {FORWARD, BACKWARD, STRAFE_LEFT, STRAFE_RIGHT} move_t;
@@ -146,7 +145,7 @@ point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
 float speed = 0.1;
-float jump_height = 20.0; //Default jump height.
+int jump_height = 20; //Default jump height.
 int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
@@ -266,11 +265,11 @@ void init_gl() {
  *  or the in-maze point of view.
  */
 void set_camera() {
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    debug_eye();
-    debug("Heading: %f\n", phi*180/M_PI);
     if (!bird_eye) {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        debug_eye();
+        debug("Heading: %f\n", phi*180/M_PI);
         debug("Setting camera");
         look_at.x = eye_radius * cos(phi) + eye.x;
         look_at.y = eye.y;
@@ -651,14 +650,16 @@ void rotate_counter_clockwise() {
  */
 void jump(int i) {
     if (i == 0) {
+        bird_eye = false;
         set_camera();
     }
     else {
+        bird_eye = true;
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         gluLookAt(eye.x, i, eye.z,
-                look_at.x, 0.0, look_at.z,
-                0.0, 1.0, 0.0);
+                  look_at.x, 0.0, look_at.z,
+                  0.0, 1.0, 0.0);
     }
     glutPostRedisplay() ;
 }
@@ -666,7 +667,8 @@ void jump(int i) {
 /**Animates the jump up to view the maze
  */
 void animate_jump() {
-    for (int i = 0; i <= JUMP_TIME; ++i) {
+    bird_eye = true;
+    for (int i = 0; i <= jump_height; ++i) {
         glutTimerFunc(50*i, (*jump), i);
     }
 }
@@ -674,8 +676,8 @@ void animate_jump() {
 /** animate the fall back down to the maze.
  */
 void animate_fall() {
-    for (int i = 0; i <= JUMP_TIME; ++i) {
-        glutTimerFunc(50*i, (*jump), JUMP_TIME-i);
+    for (int i = 0; i <= jump_height; ++i) {
+        glutTimerFunc(50*i, (*jump), jump_height-i);
     }
 }
 
@@ -712,7 +714,6 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
     // Additional movement keys. I like vim movement so those are added.
-    bool noJump = true;
     switch(key) {
         case 'w':
         case 'k':
@@ -745,14 +746,10 @@ void handle_key(unsigned char key, int x, int y) {
     	    else {
     	      animate_fall();
     	    }
-    	    noJump = false;
-    	    bird_eye = !bird_eye;
     	    break;
     }
     set_camera();
-    if(noJump){
-      glutPostRedisplay() ;
-    }
+    glutPostRedisplay() ;
 }
 
 /** Handle special key events.

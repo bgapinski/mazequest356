@@ -133,6 +133,8 @@ material_t bread_crumb = {
 
 // Globals
 int win_width, win_height ;
+float view_plane_near = 0.1;
+float view_plane_far = 100.0;
 int nrows, ncols;
 maze_t* maze;
 cell_t* start; 
@@ -144,8 +146,7 @@ point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
 float speed = 0.1;
-float view_plane_near = 0.1;
-float view_plane_far = 100.0;
+float jump_height = 20.0; //Default jump height.
 int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
@@ -264,9 +265,9 @@ void set_camera() {
     debug("Heading: %f\n", phi*180/M_PI);
     if (bird_eye) {
         debug("Setting camera to bird view");
-        gluLookAt(eye.x, 20.0, eye.z,
-                  nrows/2, 0.0, ncols/2,
-                  cos(phi), 0.0, sin(phi));
+        gluLookAt(eye.x, jump_height, eye.z,
+                  look_at.x, 0.0, look_at.z,
+                  0.0, 1.0, 0.0);
     }
     else {
         debug("Setting camera");

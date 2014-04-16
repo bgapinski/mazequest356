@@ -137,7 +137,7 @@ maze_t* maze;
 cell_t* start; 
 cell_t* end;
 point3_t eye;
-float eye_radius = 10.0; // How far ahead we can see.
+float eye_radius = 4.0; // How far ahead we can see.
 float phi = 0.0; // Our heading. 0 is north.
 point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
@@ -657,7 +657,7 @@ void jump(int i)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   gluLookAt(eye.x, i, eye.z,
-	    eye.x, 0.0, eye.z,
+	    look_at.x, 0.0, look_at.z,
 	    cos(phi), 0.0, sin(phi));
   glutPostRedisplay() ;
 }

@@ -148,6 +148,7 @@ bool bird_eye = false; // If the eye is in the maze or bird_eye
 float speed = 0.1;
 int jump_height = 20; //Default jump height.
 int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
+bool victory = false; // If we have completed the maze or not.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
 
@@ -522,8 +523,9 @@ void print_victory() {
 
     char* s;
     asprintf(&s,
-            "\tCongratulations!\n"
-            "You have conquered the maze!");
+            "\t\tCongratulations,\n"
+            "You have conquered the maze!\n"
+            "Press <Enter> to continue exploring.");
 
     glDisable(GL_LIGHTING);
     glColor3f(1.0, 1.0, 1.0);
@@ -614,7 +616,8 @@ void move(move_t dir) {
             eye.x = new_x;
             eye.z = new_z;
             visited[r][c] = 1;
-            if (end->c == c && end->r == r) {
+            if ((end->c == c && end->r == r) && !victory) {
+                victory = true;
                 print_victory();
             }
         }
@@ -749,6 +752,8 @@ void handle_key(unsigned char key, int x, int y) {
                 animate_fall();
             }
             break;
+        case '\r':
+            glutDisplayFunc(handle_display);
     }
     set_camera();
     glutPostRedisplay() ;

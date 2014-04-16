@@ -64,7 +64,7 @@ void init_maze();
 
 /* Drawing functions */
 void draw_wall();
-void draw_tile(GLfloat*);
+void draw_tile();
 void draw_maze_walls();
 void draw_maze_tiles();
 void print_position();
@@ -139,7 +139,7 @@ cell_t* start;
 cell_t* end;
 point3_t eye;
 float eye_radius = 10.0; // How far ahead we can see.
-float phi = 0.0; // The angle from north we are looking at.
+float phi = 0.0; // Our heading. 0 is north.
 point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
 bool bird_eye = false; // If the eye is in the maze or bird_eye
@@ -149,6 +149,9 @@ float view_plane_far = 100.0;
 int** visited; // Each entry correpsonds to a row/col. 1 if visited 0 else.
 
 unsigned char dir[] = {NORTH, EAST, SOUTH, WEST};
+
+GLuint dlist_id_wall;
+GLuint dlist_id_tile;
 
 void debug_eye() {
     debug("Eye:\n\tx: %f\n\ty: %f\n\tz: %f", eye.x, eye.y, eye.z);
@@ -239,7 +242,15 @@ void init_gl() {
     set_camera() ;
     set_lighting() ;
    
-    //dlist_id = glGenLists(1) ;
+    dlist_id_wall = glGenLists(1);
+    glNewList(dlist_id_wall, GL_COMPILE);
+    draw_wall();
+    glEndList();
+
+    dlist_id_tile = glGenLists(1);
+    glNewList(dlist_id_tile, GL_COMPILE);
+    draw_tile();
+    glEndList();
 }
 
 /** Sets the camera frame.
@@ -372,8 +383,7 @@ void draw_wall() {
  *
  *  @param color the color to draw the tile.
  */
-void draw_tile(GLfloat* color) {
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+void draw_tile() {
 
     glBegin(GL_QUADS);
 
@@ -398,14 +408,14 @@ void draw_maze_walls() {
                 glTranslatef(i+0.5, 0.5, j);
                 glScalef(1.0, 1.0, 1.25); //Smooth out the corners
                 glRotatef(90, 0.0, 1.0, 0.0);
-                draw_wall();
+                glCallList(dlist_id_wall);
                 glPopMatrix();
             }
             if (has_wall(maze, cell, EAST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j+0.5);
                 glScalef(1.25, 1.0, 1.0);
-                draw_wall();
+                glCallList(dlist_id_wall);
                 glPopMatrix();
             }
             if (has_wall(maze, cell, SOUTH)) {
@@ -413,14 +423,14 @@ void draw_maze_walls() {
                 glTranslatef(i-0.5, 0.5, j);
                 glScalef(1.0, 1.0, 1.25); //Smooth out the corners
                 glRotatef(90, 0.0, 1.0, 0.0);
-                draw_wall();
+                glCallList(dlist_id_wall);
                 glPopMatrix();
             }
             if (has_wall(maze, cell, WEST)) {
                 glPushMatrix();
                 glTranslatef(i, 0.5, j-0.5);
                 glScalef(1.25, 1.0, 1.0);
-                draw_wall();
+                glCallList(dlist_id_wall);
                 glPopMatrix();
             }
         }
@@ -432,31 +442,35 @@ void draw_maze_walls() {
  *  the end tile, and the breadcrumbs.
  */
 void draw_maze_tiles() {
+
     glMatrixMode(GL_MODELVIEW);
 
     // Draw the start tile.
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, start_tile.diffuse);
     glPushMatrix();
     glTranslatef(start->r, 0.0, start->c);
     glScalef(0.5, 1.0, 0.5);
-    draw_tile(start_tile.diffuse);
+    glCallList(dlist_id_tile);
     glPopMatrix();
 
     // Draw the end tile.
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, end_tile.diffuse);
     glPushMatrix();
     glTranslatef(end->r, 0.0, end->c);
     glScalef(0.5, 1.0, 0.5);
-    draw_tile(end_tile.diffuse);
+    glCallList(dlist_id_tile);
     glPopMatrix();
 
     // Draw bread crumbs.
     // This isn't very efficient but we don't have a set :(
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, bread_crumb.diffuse);
     for (int r = 0; r < nrows; ++r) {
         for (int c = 0; c < ncols; ++c) {
             if (visited[r][c] == 1) {
                 glPushMatrix();
                 glTranslatef(r, 0.0001, c); //Let the tiles sit atop the start cell.
                 glScalef(0.125, 2.0, 0.125);
-                draw_tile(bread_crumb.diffuse);
+                glCallList(dlist_id_tile);
                 glPopMatrix();
             }
         }
@@ -505,7 +519,7 @@ void print_victory() {
 
     char* s;
     asprintf(&s,
-            "Congratulations!\n"
+            "\tCongratulations!\n"
             "You have conquered the maze!");
 
     glDisable(GL_LIGHTING);
@@ -584,6 +598,7 @@ void move(move_t dir) {
                 new_z = eye.z - speed * sin(phi);
                 break;
             case STRAFE_LEFT:
+                // Strafing moves at a right angle to our heading.
                 new_x = eye.x - speed * cos(phi + M_PI/2);
                 new_z = eye.z - speed * sin(phi + M_PI/2);
                 break;

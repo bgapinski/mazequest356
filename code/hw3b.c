@@ -560,7 +560,6 @@ void print_victory() {
  *  @return true if the new position collides with a wall,
  *      false otherwise.
  */
-// TODO: Use has passage for detection instead of has wall.
 bool check_collision(float x, float z, int cur_row, int cur_col) {
     cell_t* cell = get_cell(maze, cur_row, cur_col);
     debug("Row, col: %d, %d", cur_row, cur_col);

@@ -140,7 +140,7 @@ maze_t* maze;
 cell_t* start; 
 cell_t* end;
 point3_t eye;
-float eye_radius = 10.0; // How far ahead we can see.
+float eye_radius = 5.0; // How far ahead we can see.
 float phi = 0.0; // Our heading. 0 is north.
 point3_t look_at;
 vector3_t up = {0.0, 1.0, 0.0};
@@ -712,6 +712,7 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
     // Additional movement keys. I like vim movement so those are added.
+    bool noJump = true;
     switch(key) {
         case 'w':
         case 'k':
@@ -744,11 +745,14 @@ void handle_key(unsigned char key, int x, int y) {
     	    else {
     	      animate_fall();
     	    }
+    	    noJump = false;
     	    bird_eye = !bird_eye;
     	    break;
     }
     set_camera();
-    glutPostRedisplay() ;
+    if(noJump){
+      glutPostRedisplay() ;
+    }
 }
 
 /** Handle special key events.

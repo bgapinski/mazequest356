@@ -749,6 +749,7 @@ void handle_reshape(int w, int h) {
 void handle_key(unsigned char key, int x, int y) {
     debug("handle_key(%d)", key) ;
     // Additional movement keys. I like vim movement so those are added.
+    bool noJump = true;
     switch(key) {
         case 'w':
         case 'k':
@@ -781,11 +782,14 @@ void handle_key(unsigned char key, int x, int y) {
     	    else {
     	      animate_fall();
     	    }
+    	    noJump = false;
     	    bird_eye = !bird_eye;
     	    break;
     }
     set_camera();
-    glutPostRedisplay() ;
+    if(noJump){
+      glutPostRedisplay() ;
+    }
 }
 
 /** Handle special key events.

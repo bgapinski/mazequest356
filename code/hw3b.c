@@ -75,6 +75,7 @@ bool check_collision(float, float, int, int);
 void move(move_t);
 void rotate_clockwise();
 void rotate_counter_clockwise();
+void jump(int);
 void animate_jump();
 void animate_fall();
 
@@ -645,8 +646,9 @@ void rotate_counter_clockwise() {
     }
 }
 
-/**Used to set the view point when jumping
-   @param i the current height
+/** Used to set the view point when jumping
+ *
+ *  @param i the current height
  */
 void jump(int i) {
     if (i == 0) {

@@ -742,13 +742,13 @@ void handle_key(unsigned char key, int x, int y) {
             move(STRAFE_RIGHT);
             break;
         case ' ':
-    	    if(!bird_eye) {
-    	      animate_jump();
-    	    }
-    	    else {
-    	      animate_fall();
-    	    }
-    	    break;
+            if(!bird_eye) {
+                animate_jump();
+            }
+            else {
+                animate_fall();
+            }
+            break;
     }
     set_camera();
     glutPostRedisplay() ;
